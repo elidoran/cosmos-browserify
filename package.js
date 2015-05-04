@@ -1,6 +1,6 @@
 Package.describe({
   name: 'cosmos:browserify',
-  version: '0.1.1',
+  version: '0.1.2',
   summary: 'Bundle NPM modules for client side with Browserify',
   git: 'https://github.com/elidoran/cosmos-browserify.git',
   documentation: 'README.md'
@@ -8,7 +8,7 @@ Package.describe({
 
 Package.registerBuildPlugin({
   name: "cosmosBrowserify",
-  use: ['coffeescript','meteor'],
+  use: ['coffeescript@1.0.6','meteor'],
   sources: ['plugin/browserify.coffee'],
   npmDependencies: {"browserify": "9.0.8"}
 });
@@ -16,5 +16,5 @@ Package.registerBuildPlugin({
 Package.onTest(function(api) {
   api.use('tinytest');
   api.use('cosmos:browserify');
-  api.addFiles('browserify-tests.js');
+  api.addFiles('test/browserify-tests.js');
 });
