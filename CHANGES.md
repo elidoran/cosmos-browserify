@@ -1,4 +1,8 @@
 
+# 0.1.3 - 2015/05/04
+
+1. previous publish was incomplete. must republish to new version
+
 # 0.1.2 - 2015/05/04
 
 1. fixed `package.js` test file path
