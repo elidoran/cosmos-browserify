@@ -4,8 +4,9 @@
 
 ### Simple Example
 
-Look at [cosmos-browserify-example](http://github.com/elidoran/cosmos-browserify-example)
-for a complete working Meteor app example.
+Look at [cosmos-browserify-example](http://github.com/elidoran/cosmos-browserify-example) 
+for a complete working Meteor app example. Look at a [package in the app](http://github.com/elidoran/cosmos-browserify-example/tree/master/packages/browserify-example) 
+to see how to make one.
 
 ### Easy as 1 2 3
 
@@ -14,32 +15,44 @@ Three steps to using `cosmos:browserify` with the `upper-case` npm module.
 1. Add to `package.js`:
 
     ```javascript
+    // have Meteor get the npm module for you
     Npm.depends({'upper-case':'1.1.2'});
-    
+
     Package.onUse(function(api) {
+      // use this package
       api.use(['cosmos:browserify'], 'client');
+      
+      // add file in Step #2, and the package's client script
+      api.addFiles(['browserify.js', 'example.js'], 'client');
+      
+      // OPTIONAL: make available to the entire client by exporting it:
+      api.export('uppercase', 'client');
     });
     ```
 
 2. Add to `browserify.js` in the root of your package:
 
     ```javascript
-    uppercase = require('upper-case'); // w/out `var` it will be package scoped
+    // w/out `var` it will be package scoped so package code may use it
+    uppercase = require('upper-case');
     ```
 
-3. Add to your Meteor package's client script:
+3. Add to Meteor package's client script:
 
+    If you exported the variable then you may use it in an app script.
+    
     ```javascript
     console.log("example use: ", uppercase('some text'));
     ```
 
-Your browser's console will print: `example use: SOME TEXT` 
+Your browser's console will print: `example use: SOME TEXT`
+
 
 ### Install and Usage
 
 #### Step 1: NPM dependencies
 
-Use Meteor's [Npm.depend()](http://docs.meteor.com/#/full/Npm-depends) to add npm 
+Use Meteor's [Npm.depend()](http://docs.meteor.com/#/full/Npm-depends) to add npm
 modules as dependencies in `package.js`:
 
 ```javascript
@@ -49,13 +62,13 @@ Npm.depends({
 });
 ```
 
-Meteor automatically downloads the NPM modules into your package 
-at `.npm/package`. Commit the folder to source control. It has an 
+Meteor automatically downloads the NPM modules into your package
+at `.npm/package`. Commit the folder to source control. It has an
 `npm-shrinkwrap.json` for consistent dependency versions.
 
 #### Step 2: Use `cosmos:browserify` package
 
-Add `cosmos:browserify` as a client package dependency in the `onUse` section 
+Add `cosmos:browserify` as a client package dependency in the `onUse` section
 of `package.js`.
 
 ```javascript
@@ -80,9 +93,9 @@ for example.
 something = require('module-name');
 ```
 
-Now, `cosmos:browserify` will use browserify to bundle all modules into a single 
-JavaScript file and add it to the **client side**. The variables declared 
-without `var` in this file will be available to your meteor package's client 
+Now, `cosmos:browserify` will use browserify to bundle all modules into a single
+JavaScript file and add it to the **client side**. The variables declared
+without `var` in this file will be available to your meteor package's client
 code as package scoped variables.
 
 #### Step 4: Verify Script is in the Client
@@ -136,6 +149,17 @@ instance = something()
 
 // if it's a class function
 instance = new something()
+```
+
+## Meteor Application Scope
+
+Variables in `browserify.js` are not available globally to client code because Meteor limits variables published by a package to *package scope*.
+
+Use Meteor's [api.export()](http://docs.meteor.com/#/full/pack_export) to make a variable available to all client code:
+
+```javascript
+// Use the name of the variable you created in `browserify.js`
+api.export('uppercase', 'client');
 ```
 
 ## MIT License
