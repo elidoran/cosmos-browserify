@@ -4,7 +4,7 @@ stream     = Npm.require 'stream'
 getString = (bundle, cb) -> # async function reading entire bundle
   string = '' # holds all as a string
   bundle.on 'data', (data) -> string += data
-  bundle.on 'end', -> cb undefined, string  # undefined = error
+  bundle.once 'end', -> cb undefined, string  # undefined = error
 
 Plugin.registerSourceHandler 'browserify.js', (step) ->
   # TODO: how to know if it's production or dev? change value of debug...
