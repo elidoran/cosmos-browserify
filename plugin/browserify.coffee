@@ -32,7 +32,7 @@ processFile = (step) ->
   # must tell Browserify where to find npm modules.
   # CompileStep has the absolute path to the file in `fullInputPath`
   # CompileStep has the name of the file in `inputPath`
-  # so basedir is the fullInputPath with the file removed and '.npm/package' added
+  # basedir is fullInputPath with inputPath replaced with '.npm/package'
   basedir = step.fullInputPath.slice(0, -(step.inputPath.length)) + '.npm/package'
 
   # create a browserify instance passing our readable stream as input,
@@ -46,8 +46,7 @@ processFile = (step) ->
   # set the readable stream's encoding so we read strings from it
   bundle.setEncoding('utf8')
 
-  # use Meteor.wrapAsyn to wrap `getString` so it's done synchronously and
-  # returns the result right here when it's done
+  # use Meteor.wrapAsync to wrap `getString` so it's done synchronously
   wrappedFn = Meteor.wrapAsync getString
 
   # call our wrapped function with the readable stream as its argument
