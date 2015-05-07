@@ -74,7 +74,7 @@ of `package.js`.
 ```javascript
 Package.onUse(function(api) {
   api.use([
-    'cosmos:browserify'
+    'cosmos:browserify@0.1.3'
   ], 'client');
 });
 ```
