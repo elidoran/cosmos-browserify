@@ -30,11 +30,11 @@ processFile = (step) ->
   readable.end buffer
 
   # must tell Browserify where to find npm modules.
-  # ComppileStep has the absolute path to the file in `fullInputPath`
+  # CompileStep has the absolute path to the file in `fullInputPath`
   # CompileStep has the name of the file in `inputPath`
   # so basedir is the fullInputPath with the file removed and '.npm/package' added
   basedir = step.fullInputPath.slice(0, -(step.inputPath.length)) + '.npm/package'
-  
+
   # create a browserify instance passing our readable stream as input,
   # and options with debug set to true for a dev build, and the basedir
   browserify = Browserify [readable], debug:true, basedir:basedir
