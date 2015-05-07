@@ -4,8 +4,8 @@
 
 ### Simple Example
 
-Look at [cosmos-browserify-example](http://github.com/elidoran/cosmos-browserify-example) 
-for a complete working Meteor app example. Look at a [package in the app](http://github.com/elidoran/cosmos-browserify-example/tree/master/packages/browserify-example) 
+Look at [cosmos-browserify-example](http://github.com/elidoran/cosmos-browserify-example)
+for a complete working Meteor app example. Look at a [package in the app](http://github.com/elidoran/cosmos-browserify-example/tree/master/packages/browserify-example)
 to see how to make one.
 
 ### Easy as 1 2 3
@@ -21,10 +21,10 @@ Three steps to using `cosmos:browserify` with the `upper-case` npm module.
     Package.onUse(function(api) {
       // use this package
       api.use(['cosmos:browserify'], 'client');
-      
+
       // add file in Step #2, and the package's client script
       api.addFiles(['browserify.js', 'example.js'], 'client');
-      
+
       // OPTIONAL: make available to the entire client by exporting it:
       api.export('uppercase', 'client');
     });
@@ -40,7 +40,7 @@ Three steps to using `cosmos:browserify` with the `upper-case` npm module.
 3. Add to Meteor package's client script:
 
     If you exported the variable then you may use it in an app script.
-    
+
     ```javascript
     console.log("example use: ", uppercase('some text'));
     ```
