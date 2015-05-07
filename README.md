@@ -20,7 +20,7 @@ Three steps to using `cosmos:browserify` with the `upper-case` npm module.
 
     Package.onUse(function(api) {
       // use this package
-      api.use(['cosmos:browserify'], 'client');
+      api.use(['cosmos:browserify@0.1.3'], 'client');
 
       // add file in Step #2, and the package's client script
       api.addFiles(['browserify.js', 'example.js'], 'client');
