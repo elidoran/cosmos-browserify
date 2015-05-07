@@ -7,7 +7,7 @@ Package.describe({
 });
 
 Package.registerBuildPlugin({
-  name: "cosmosBrowserify",
+  name: "CosmosBrowserify",
   // need 'meteor' for Npm and Meteor.wrapAsync
   use: ['coffeescript@1.0.6','meteor'],
   sources: ['plugin/browserify.coffee'],
