@@ -1,3 +1,10 @@
+# 0.1.4 - Unpublished
+
+1. changed plugin name to CosmosBrowserify
+2. added Travis CI
+3. added testing of a successful plugin call
+4. ignore .DS_Store files
+5. reformatted plugin's browserify.coffee with more comments and whitespace
 
 # 0.1.3 - 2015/05/04
 
