@@ -15,6 +15,9 @@ getString = (bundle, cb) ->
   # when we reach the end, call Meteor.wrapAsync's callback with string result
   bundle.once 'end', -> cb undefined, string  # undefined = error
 
+  # when there's an error, give it to the callback
+  bundle.once 'error', (error) -> cb error
+
 # TODO: how to know if it's production or dev? change value of debug...
 # TODO: inputPath may include directories we need to strip for basedir
 processFile = (step) ->
@@ -49,15 +52,23 @@ processFile = (step) ->
   # use Meteor.wrapAsync to wrap `getString` so it's done synchronously
   wrappedFn = Meteor.wrapAsync getString
 
-  # call our wrapped function with the readable stream as its argument
-  string = wrappedFn bundle
+  try # try-catch for browserify errors
 
-  # now that we have the compiled result as a string we can add it using CompileStep
-  step.addJavaScript
-    path:       step.inputPath  # name of the file
-    sourcePath: step.inputPath  # use same name, we've just browserified it
-    data:       string          # the actual browserified results
-    bare:       step?.fileOptions?.bare
+    # call our wrapped function with the readable stream as its argument
+    string = wrappedFn bundle
+
+    # now that we have the compiled result as a string we can add it using CompileStep
+    # inside try-catch because this shouldn't run when there's an error.
+    step.addJavaScript
+      path:       step.inputPath  # name of the file
+      sourcePath: step.inputPath  # use same name, we've just browserified it
+      data:       string          # the actual browserified results
+      bare:       step?.fileOptions?.bare
+
+  catch e
+    # output error via CompileStep#error()
+    # convert it to a string and then remove the 'Error: ' at the beginning.
+    step.error message:e.toString().substring 7
 
 # add our function as the handler for files ending in 'browserify.js'
 Plugin.registerSourceHandler 'browserify.js', processFile
