@@ -5,6 +5,7 @@
 3. added testing of a successful plugin call
 4. ignore .DS_Store files
 5. reformatted plugin's [browserify.coffee](https://github.com/elidoran/cosmos-browserify/blob/master/plugin/browserify.coffee) with more comments and whitespace
+6. added error handling for browserify errors
 
 # 0.1.3 - 2015/05/04
 
