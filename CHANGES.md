@@ -6,6 +6,7 @@
 4. ignore .DS_Store files
 5. reformatted plugin's [browserify.coffee](https://github.com/elidoran/cosmos-browserify/blob/master/plugin/browserify.coffee) with more comments and whitespace
 6. added error handling for browserify errors
+7. determine `debug` for browserify based on `process.argv` contents. (Thank you Arunoda for this idea)
 
 # 0.1.3 - 2015/05/04
 
