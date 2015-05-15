@@ -18,7 +18,6 @@ getString = (bundle, cb) ->
   # when there's an error, give it to the callback
   bundle.once 'error', (error) -> cb error
 
-# TODO: how to know if it's production or dev? change value of debug...
 # TODO: inputPath may include directories we need to strip for basedir
 processFile = (step) ->
 
@@ -38,9 +37,18 @@ processFile = (step) ->
   # basedir is fullInputPath with inputPath replaced with '.npm/package'
   basedir = step.fullInputPath.slice(0, -(step.inputPath.length)) + '.npm/package'
 
+  # debug is true unless we are doing a bundle or build, excpet with --debug set
+  debug = true
+  # check args used
+  for key in process.argv
+    # if 'meteor bundle file' or 'meteor build file'
+    if key is 'bundle' or key is 'build'
+      debug = '--debug' in process.argv
+      break;
+
   # create a browserify instance passing our readable stream as input,
   # and options with debug set to true for a dev build, and the basedir
-  browserify = Browserify [readable], debug:true, basedir:basedir
+  browserify = Browserify [readable], debug:debug, basedir:basedir
 
   # have browserify process the file and include all required modules.
   # we receive a readable stream as the result
