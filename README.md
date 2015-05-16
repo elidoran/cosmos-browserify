@@ -168,18 +168,22 @@ You may define npm modules at the app level by using [meteorhacks:npm](https://g
 use these in an app `browserify.js` file.
 
 1. add the two packages to your app:
+
     ```
     meteor add cosmos:browserify
     meteor add meteorhacks:npm
     ```
-3. create a browserify file in the app. For example, all these would work:
+
+2. create a browserify file in the app. For example, all these would work:
+
     ```
     yourapp/app.browserify.js
     yourapp/client/browserify.js
     yourapp/client/helpers/somemodule.browserify.js
     ```
-4. declare the npm modules in `yourapp/packages.json` (if it doesn't exist yet run your app once and meteorhacks:npm will create it)
-5. write contents of the browserify.js file the same as usual
+
+3. declare the npm modules in `yourapp/packages.json` (if it doesn't exist yet run your app once and meteorhacks:npm will create it)
+4. write contents of the browserify.js file the same as usual
 
 This alleviates the need to create your own package to browserify a file. You may
 still use your own package to do `Npm.depends()` and export your browserified
