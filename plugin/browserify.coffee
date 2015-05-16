@@ -3,21 +3,6 @@ Browserify = Npm.require 'browserify'
 # get 'stream' to use PassThrough to provide a Buffer as a Readable stream
 stream     = Npm.require 'stream'
 
-# async function for reading entire bundle output into a string
-getString = (bundle, cb) ->
-
-  # holds all data read from bundle
-  string = ''
-
-  # concatenate data chunk to string
-  bundle.on 'data', (data) -> string += data
-
-  # when we reach the end, call Meteor.wrapAsync's callback with string result
-  bundle.once 'end', -> cb undefined, string  # undefined = error
-
-  # when there's an error, give it to the callback
-  bundle.once 'error', (error) -> cb error
-
 # TODO: inputPath may include directories we need to strip for basedir
 processFile = (step) ->
 
@@ -86,3 +71,18 @@ getReadable = (step) ->
   # Meteor's CompileStep provides the file as a Buffer from step.read()
   # add the buffer into the stream and end the stream with one call to end()
   readable.end step.read()
+
+# async function for reading entire bundle output into a string
+getString = (bundle, cb) ->
+
+  # holds all data read from bundle
+  string = ''
+
+  # concatenate data chunk to string
+  bundle.on 'data', (data) -> string += data
+
+  # when we reach the end, call Meteor.wrapAsync's callback with string result
+  bundle.once 'end', -> cb undefined, string  # undefined = error
+
+  # when there's an error, give it to the callback
+  bundle.once 'error', (error) -> cb error
