@@ -3,15 +3,14 @@ Browserify = Npm.require 'browserify'
 # get 'stream' to use PassThrough to provide a Buffer as a Readable stream
 stream     = Npm.require 'stream'
 
-# TODO: inputPath may include directories we need to strip for basedir
 processFile = (step) ->
 
   # create a browserify instance passing our readable stream as input,
   # and options object for debug and the basedir
   browserify = Browserify [getReadable(step)],
     # browserify options
-    basedir = getBasedir(step) # Browserify looks here for npm modules
-    debug = getDebug(step)     # Browserify creates internal source map
+    basedir: getBasedir(step) # Browserify looks here for npm modules
+    debug: getDebug(step)     # Browserify creates internal source map
 
   # have browserify process the file and include all required modules.
   # we receive a readable stream as the result
@@ -39,16 +38,35 @@ processFile = (step) ->
   catch e
     # output error via CompileStep#error()
     # convert it to a string and then remove the 'Error: ' at the beginning.
-    step.error message:e.toString().substring 7
+    #step.error message:e.toString().substring 7
 
 # add our function as the handler for files ending in 'browserify.js'
 Plugin.registerSourceHandler 'browserify.js', processFile
 
 getBasedir = (step) ->
-  # CompileStep has the absolute path to the file in `fullInputPath`
-  # CompileStep has the name of the file in `inputPath`
-  # basedir is fullInputPath with inputPath replaced with '.npm/package'
-  basedir = step.fullInputPath.slice(0, -(step.inputPath.length)) + '.npm/package'
+
+  # basedir should point to the '.npm/package' folder containing the npm modules.
+  # step.fullInputPath is the full path to our browserify.js file. it may be:
+  #   1. in a package
+  #   2. in the app itself
+  # for both of the above it also may be:
+  #   1. in the root (of package or app)
+  #   2. in a subfolder
+  # NOTE:
+  #   the app doesn't have npm support, so, no .npm/package.
+  #   using meteorhacks:npm creates a package to contain the npm modules.
+  #   so, if the browserify.js file is an app file, then let's look for
+  #   packages/npm-container/.npm/package
+
+  # the basedir tail depends on whether this file is in the app or a package
+  # for an app file, we're going to assume they are using meteorhacks:npm
+  tail = if step?.packageName? then '.npm/package' else 'packages/npm-container/.npm/package'
+
+  #   CompileStep has the absolute path to the file in `fullInputPath`
+  #   CompileStep has the package/app relative path to the file in `inputPath`
+  #   basedir is fullInputPath with inputPath replaced with the tail
+  basedir = step.fullInputPath.slice(0, -(step.inputPath.length)) + tail
+  return basedir
 
 getDebug = (step) ->
   debug = true
@@ -71,6 +89,8 @@ getReadable = (step) ->
   # Meteor's CompileStep provides the file as a Buffer from step.read()
   # add the buffer into the stream and end the stream with one call to end()
   readable.end step.read()
+
+  return readable
 
 # async function for reading entire bundle output into a string
 getString = (bundle, cb) ->
