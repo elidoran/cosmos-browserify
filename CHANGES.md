@@ -1,4 +1,4 @@
-# 0.1.4 - Unpublished
+# 0.1.4 - 2015/05/15
 
 1. changed plugin name to CosmosBrowserify
 2. added Travis CI
