@@ -50,9 +50,13 @@ required =
         # once 'end', fn => calls the callback
         once: (eventType, fn) ->
           # store what its called with
-          Result.browserify.once = event:eventType, fn:fn
-          # if it's the correct event type then call the function now
-          if eventType is 'end' then fn()
+          Result.browserify.once ?= {}
+          Result.browserify.once[eventType] = fn
+          # only call the end() fn when we're not testing an error
+          if eventType is 'end' and not Result?.errorWanted then fn()
+
+          # only call the error() fn when we're testing an error
+          if eventType is 'error' and Result?.errorWanted then fn 'test error'
       }
 
 # mock this by returning our mock objects instead
@@ -76,6 +80,7 @@ required =
         options?.fullInputPath ? '/full/path/to/app/packages/file.browserify.js'
       # store the info into the step so it can be tested
       addJavaScript: (info) -> step.js = info
+      error: (info) -> Result.errorReceived = info
 
     # return the step we created
     return step
@@ -90,7 +95,9 @@ required =
 Meteor.wrapAsync = (fn) ->
   # bundle is our mocked bundle object
   return (bundle) ->
+    result = {}
     # call getString with mocked bundle and our callback which stores the string
-    fn bundle, (error, string) -> Result.bundleString = string
-    # return the string result back into plugin
-    return Result.bundleString
+    fn bundle, (error, string) -> result = error:error, string:string
+    # return result string to plugin, or throw error
+    if result?.error then throw new Error result.error
+    return result.string
