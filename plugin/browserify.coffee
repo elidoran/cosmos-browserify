@@ -38,7 +38,7 @@ processFile = (step) ->
   catch e
     # output error via CompileStep#error()
     # convert it to a string and then remove the 'Error: ' at the beginning.
-    #step.error message:e.toString().substring 7
+    step.error message:e.toString().substring 7
 
 # add our function as the handler for files ending in 'browserify.js'
 Plugin.registerSourceHandler 'browserify.js', processFile
