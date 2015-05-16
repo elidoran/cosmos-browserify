@@ -1,3 +1,8 @@
+# 0.2.0 - Unpublished
+
+1. refactored  [browserify.coffee](https://github.com/elidoran/cosmos-browserify/blob/master/plugin/browserify.coffee)
+2. added support for [meteorhacks:npm](https://github.com/meteorhacks/npm) providing app level npm modules for app browserify.js files
+
 # 0.1.4 - 2015/05/15
 
 1. changed plugin name to CosmosBrowserify
