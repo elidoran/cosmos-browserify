@@ -33,16 +33,10 @@ processFile = (step) ->
   # CompileStep has the absolute path to the file in `fullInputPath`
   # CompileStep has the name of the file in `inputPath`
   # basedir is fullInputPath with inputPath replaced with '.npm/package'
-  basedir = step.fullInputPath.slice(0, -(step.inputPath.length)) + '.npm/package'
+  basedir = getBasedir(step)
 
   # debug is true unless we are doing a bundle or build, excpet with --debug set
-  debug = true
-  # check args used
-  for key in process.argv
-    # if 'meteor bundle file' or 'meteor build file'
-    if key is 'bundle' or key is 'build'
-      debug = '--debug' in process.argv
-      break;
+  debug = getDebug(step)
 
   # create a browserify instance passing our readable stream as input,
   # and options with debug set to true for a dev build, and the basedir
@@ -78,3 +72,21 @@ processFile = (step) ->
 
 # add our function as the handler for files ending in 'browserify.js'
 Plugin.registerSourceHandler 'browserify.js', processFile
+
+getBasedir = (step) ->
+  # CompileStep has the absolute path to the file in `fullInputPath`
+  # CompileStep has the name of the file in `inputPath`
+  # basedir is fullInputPath with inputPath replaced with '.npm/package'
+  basedir = step.fullInputPath.slice(0, -(step.inputPath.length)) + '.npm/package'
+
+getDebug = (step) ->
+  debug = true
+  
+  # check args used
+  for key in process.argv
+    # if 'meteor bundle file' or 'meteor build file'
+    if key is 'bundle' or key is 'build'
+      debug = '--debug' in process.argv
+      break;
+
+  return debug
