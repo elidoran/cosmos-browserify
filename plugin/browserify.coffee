@@ -29,18 +29,12 @@ processFile = (step) ->
   # add the buffer into the stream and end the stream with one call to end()
   readable.end step.read()
 
-  # must tell Browserify where to find npm modules.
-  # CompileStep has the absolute path to the file in `fullInputPath`
-  # CompileStep has the name of the file in `inputPath`
-  # basedir is fullInputPath with inputPath replaced with '.npm/package'
-  basedir = getBasedir(step)
-
-  # debug is true unless we are doing a bundle or build, excpet with --debug set
-  debug = getDebug(step)
-
   # create a browserify instance passing our readable stream as input,
   # and options with debug set to true for a dev build, and the basedir
-  browserify = Browserify [readable], debug:debug, basedir:basedir
+  browserify = Browserify [readable],
+    # browserify options
+    basedir = getBasedir(step) # Browserify looks here for npm modules
+    debug = getDebug(step)     # Browserify creates internal source map
 
   # have browserify process the file and include all required modules.
   # we receive a readable stream as the result
@@ -81,7 +75,7 @@ getBasedir = (step) ->
 
 getDebug = (step) ->
   debug = true
-  
+
   # check args used
   for key in process.argv
     # if 'meteor bundle file' or 'meteor build file'
