@@ -162,4 +162,27 @@ Use Meteor's [api.export()](http://docs.meteor.com/#/full/pack_export) to make a
 api.export('uppercase', 'client');
 ```
 
+## meteorhacks:npm support
+
+You may define npm modules at the app level by using [meteorhacks:npm](https://github.com/meteorhacks/npm). You may
+use these in an app `browserify.js` file.
+
+1. add the two packages to your app:
+    ```
+    meteor add cosmos:browserify
+    meteor add meteorhacks:npm
+    ```
+3. create a browserify file in the app. For example, all these would work:
+    ```
+    yourapp/app.browserify.js
+    yourapp/client/browserify.js
+    yourapp/client/helpers/somemodule.browserify.js
+    ```
+4. declare the npm modules in `yourapp/packages.json` (if it doesn't exist yet run your app once and meteorhacks:npm will create it)
+5. write contents of the browserify.js file the same as usual
+
+This alleviates the need to create your own package to browserify a file. You may
+still use your own package to do `Npm.depends()` and export your browserified
+variables using `api.export()`.
+
 ## MIT License
