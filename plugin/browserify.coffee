@@ -21,17 +21,9 @@ getString = (bundle, cb) ->
 # TODO: inputPath may include directories we need to strip for basedir
 processFile = (step) ->
 
-  # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
-  # stream to hold the Buffer
-  readable = new stream.PassThrough()
-
-  # Meteor's CompileStep provides the file as a Buffer from step.read()
-  # add the buffer into the stream and end the stream with one call to end()
-  readable.end step.read()
-
   # create a browserify instance passing our readable stream as input,
-  # and options with debug set to true for a dev build, and the basedir
-  browserify = Browserify [readable],
+  # and options object for debug and the basedir
+  browserify = Browserify [getReadable(step)],
     # browserify options
     basedir = getBasedir(step) # Browserify looks here for npm modules
     debug = getDebug(step)     # Browserify creates internal source map
@@ -84,3 +76,13 @@ getDebug = (step) ->
       break;
 
   return debug
+
+getReadable = (step) ->
+
+  # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
+  # stream to hold the Buffer
+  readable = new stream.PassThrough()
+
+  # Meteor's CompileStep provides the file as a Buffer from step.read()
+  # add the buffer into the stream and end the stream with one call to end()
+  readable.end step.read()
