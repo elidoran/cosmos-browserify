@@ -21,15 +21,13 @@ getString = (bundle, cb) ->
 # TODO: inputPath may include directories we need to strip for basedir
 processFile = (step) ->
 
-  # Meteor's CompileStep provides the file as a Buffer
-  buffer = step.read()
-
   # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
   # stream to hold the Buffer
   readable = new stream.PassThrough()
 
+  # Meteor's CompileStep provides the file as a Buffer from step.read()
   # add the buffer into the stream and end the stream with one call to end()
-  readable.end buffer
+  readable.end step.read()
 
   # must tell Browserify where to find npm modules.
   # CompileStep has the absolute path to the file in `fullInputPath`
