@@ -6,6 +6,9 @@
 # Note the @ making the variables package scoped
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # ###
 
+# when testing `process` is undefined, so, define it
+@process = argv:[]
+
 # store results for test to verify with test.equal
 @Result = {}
 
