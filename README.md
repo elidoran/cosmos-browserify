@@ -6,8 +6,16 @@
 
 1. [Example Meteor App](#example-meteor-app)
 2. [Use in a Meteor Package](#use-in-a-meteor-package)
+    1. [Create and Add Your Package](#1-create-and-add-your-package)
+    2. [Create browserify file](#2-create-browserify-file)
+    3. [Update package.js](#3-update-packagejs)
+    4. [Verify success](#4-verify-success)
+    5. [Use Variable](#5-use-variable)
 3. [Use in a Meteor App](#use-in-a-meteor-app)
-
+    1. [Enable App npm modules](#1-enable-app-npm-modules)
+    2. [Create App browserify file](#2-create-app-browserify-file)
+    3. [Enable browserify](#3-enable-browserify)
+    4. [Verify success](#4-verify-it-worked)
 
 ## Example Meteor App
 
@@ -135,7 +143,7 @@ The first time your app runs (or if it's running when you add the package) it wi
 }
 ```
 
-#### 2. Create browserify file
+#### 2. Create app browserify file
 
 Create a JavaScript file requiring the npm modules you want to browserify. The name must end with `browserify.js`. For example:
 
