@@ -1,5 +1,7 @@
 Browserify = Npm.require 'browserify'
-envify = Npm.require 'envify'
+
+# use custom envify so we can specify the env based on the meteor command used
+envify = Npm.require 'envify/custom'
 
 # get 'stream' to use PassThrough to provide a Buffer as a Readable stream
 stream     = Npm.require 'stream'
