@@ -18,7 +18,7 @@ processFile = (step) ->
 
   # use the envify transform to replace instances of `process.env`
   # with strings
-  browserify.transform envify
+  browserify.transform envify getEnvifyOptions debug, step
 
   # have browserify process the file and include all required modules.
   # we receive a readable stream as the result
