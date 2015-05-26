@@ -6,12 +6,15 @@ stream     = Npm.require 'stream'
 
 processFile = (step) ->
 
+  # when true it's dev, when false it's production
+  debug = getDebug step
+
   # create a browserify instance passing our readable stream as input,
   # and options object for debug and the basedir
   browserify = Browserify [getReadable(step)],
     # browserify options
     basedir: getBasedir(step) # Browserify looks here for npm modules
-    debug: getDebug(step)     # Browserify creates internal source map
+    debug: debug     # Browserify creates internal source map
 
   # use the envify transform to replace instances of `process.env`
   # with strings
