@@ -18,6 +18,9 @@ processFile = (step) ->
     basedir: getBasedir(step) # Browserify looks here for npm modules
     debug: debug     # Browserify creates internal source map
 
+  # TODO: enable per file options via BrowserifyConfig, or something like that
+  # TODO: allow options to specify transforms to run
+
   # use the envify transform to replace instances of `process.env`
   # with strings
   browserify.transform envify getEnvifyOptions debug, step
