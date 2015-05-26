@@ -80,7 +80,7 @@ getBasedir = (step) ->
 
   return basedir
 
-getDebug = (step) ->
+getDebug = ->
   debug = true
 
   # check args used
