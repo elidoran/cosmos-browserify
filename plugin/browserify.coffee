@@ -1,4 +1,5 @@
 Browserify = Npm.require 'browserify'
+envify = Npm.require 'envify'
 
 # get 'stream' to use PassThrough to provide a Buffer as a Readable stream
 stream     = Npm.require 'stream'
@@ -11,6 +12,10 @@ processFile = (step) ->
     # browserify options
     basedir: getBasedir(step) # Browserify looks here for npm modules
     debug: getDebug(step)     # Browserify creates internal source map
+
+  # use the envify transform to replace instances of `process.env`
+  # with strings
+  browserify.transform envify
 
   # have browserify process the file and include all required modules.
   # we receive a readable stream as the result
