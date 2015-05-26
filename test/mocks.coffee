@@ -27,37 +27,44 @@ required =
   # instead of node's stream module, all we need is PassThrough, give the mock
   stream: PassThrough:PassThroughMock
 
+  'envify/custom': (options) -> Result.envify = options:options
+
   # instead of the real browserify
   browserify: (array, options) ->
     # store into results
     Result.browserify = array: array, options: options
     # return this mock when browserify.bundle() is called
-    return bundle: ->
-      # store this was run
-      Result.browserify.bundle = true
-      # return a mock readable stream
-      return {
-        # store the encoding it's told to use
-        setEncoding: (encoding) -> Result.browserify.encoding = encoding
+    return {
+      bundle: ->
+        # store this was run
+        Result.browserify.bundle = true
+        # return a mock readable stream
+        return {
+          # store the encoding it's told to use
+          setEncoding: (encoding) -> Result.browserify.encoding = encoding
 
-        # on 'data', fn => appends string data to string variable
-        on: (eventType, fn) ->
-          # store what its called with
-          Result.browserify.on = event:eventType, fn:fn
-          # if it's the correct event type then call the function now with a string
-          if eventType is 'data' then fn 'test data'
+          # on 'data', fn => appends string data to string variable
+          on: (eventType, fn) ->
+            # store what its called with
+            Result.browserify.on = event:eventType, fn:fn
+            # if it's the correct event type then call the function now with a string
+            if eventType is 'data' then fn 'test data'
 
-        # once 'end', fn => calls the callback
-        once: (eventType, fn) ->
-          # store what its called with
-          Result.browserify.once ?= {}
-          Result.browserify.once[eventType] = fn
-          # only call the end() fn when we're not testing an error
-          if eventType is 'end' and not Result?.errorWanted then fn()
+          # once 'end', fn => calls the callback
+          once: (eventType, fn) ->
+            # store what its called with
+            Result.browserify.once ?= {}
+            Result.browserify.once[eventType] = fn
+            # only call the end() fn when we're not testing an error
+            if eventType is 'end' and not Result?.errorWanted then fn()
 
-          # only call the error() fn when we're testing an error
-          if eventType is 'error' and Result?.errorWanted then fn 'test error'
-      }
+            # only call the error() fn when we're testing an error
+            if eventType is 'error' and Result?.errorWanted then fn 'test error'
+        }
+
+      # we received the envify transform
+      transform: (envify) -> Result.envify.transformed = true
+    }
 
 # mock this by returning our mock objects instead
 @Npm =

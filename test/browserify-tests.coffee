@@ -24,6 +24,12 @@ Tinytest.add 'test processFile', (test) ->
   options = debug:true, basedir:'/full/path/to/app/packages/.npm/package'
   test.equal Result.browserify?.options, options
 
+  # test transform (only envify)
+  test.equal Result?.envify?.options?, true, 'envify should be called with options'
+  test.equal Result.envify.options.NODE_ENV, 'development' # testing dev mode only so far
+  test.equal Result.envify.options._, 'purge'
+  test.equal Result.envify.transformed, true, 'transform should be called with envify'
+
   # test bundling with browserify and reading its result
   test.equal Result.browserify?.bundle, true, 'must run browserify.bundle()'
   test.equal Result.browserify?.encoding, 'utf8'
