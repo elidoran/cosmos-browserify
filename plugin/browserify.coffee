@@ -16,7 +16,7 @@ processFile = (step) ->
   browserify = Browserify [getReadable(step)],
     # browserify options
     basedir: getBasedir(step) # Browserify looks here for npm modules
-    debug: debug     # Browserify creates internal source map
+    debug: debug              # Browserify creates internal source map
 
   # TODO: enable per file options via BrowserifyConfig, or something like that
   # TODO: allow options to specify transforms to run
@@ -93,7 +93,7 @@ getDebug = ->
 
   # check args used
   for key in process.argv
-    # if 'meteor bundle file' or 'meteor build file'
+    # if 'meteor bundle file' or 'meteor build path'
     if key is 'bundle' or key is 'build'
       debug = '--debug' in process.argv
       break;
