@@ -1,3 +1,9 @@
+# 0.3.0 - UNPUBLISHED
+
+1. accepted [PR#5](https://github.com/elidoran/cosmos-browserify/pull/5) from [lourd](https://github.com/lourd) to use envify transform (thank you @lourd)
+2. added on to PR#5 to use envify/custom and provide its options; altered tests
+3. added warning against using extension as filename because of Meteor issue [#3985](https://github.com/meteor/meteor/issues/3985). Revised README.
+
 # 0.2.0 - 2015/05/16
 
 1. refactored  [browserify.coffee](https://github.com/elidoran/cosmos-browserify/blob/master/plugin/browserify.coffee)
