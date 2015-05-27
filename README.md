@@ -44,7 +44,9 @@ Use standard Meteor package create and add:
 
 #### 2. Create browserify file
 
-Create a JavaScript file requiring the npm modules you want to browserify. The file name must end with `browserify.js`. Example content:
+Create a JavaScript file requiring the npm modules you want to browserify. The file name must end with `browserify.js`.
+NOTE: Due to [Meteor Issue #3985](https://github.com/meteor/meteor/issues/3985) we must put something before the extension, like: `client.browserify.js`.
+Example content:
 
 ```javascript
   // without var it becomes a package scoped variable
@@ -64,7 +66,7 @@ Create a JavaScript file requiring the npm modules you want to browserify. The f
     api.use(['cosmos:browserify@0.2.0'], 'client');
 
 	// add browserify file in step #2 with your package's client files
-    api.addFiles(['browserify.js', 'your/package/file.js'], 'client');
+    api.addFiles(['client.browserify.js', 'your/package/file.js'], 'client');
 
     // OPTIONAL: make variable app (global) scoped:
     api.export('uppercase', 'client');
@@ -96,12 +98,12 @@ B. Find your package's script tag and click on it to view its source. For packag
     <script type="text/javascript" src="/packages/someuser_somepackage.js?a5c324925e5f6e800a4"></script>
 ```
 
-C. Find your package's browserify script. If your package was `someuser:somepackage` and the file named `browserify.js` then you'd look for a block like this:
+C. Find your package's browserify script. If your package was `someuser:somepackage` and the file named `client.browserify.js` then you'd look for a block like this:
 
 ```javascript
-  /////////////////////////////////////////////////
-  // packages/someuser:somepackage/browserify.js //
-  /////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////
+  // packages/someuser:somepackage/client.browserify.js //
+  ////////////////////////////////////////////////////////
 ```
 D. Ensure the variable you want is in the package scoped area. If you're looking for a variable named `uppercase` then you'd see this:
 
@@ -145,7 +147,9 @@ The first time your app runs (or if it's running when you add the package) it wi
 
 #### 2. Create app browserify file
 
-Create a JavaScript file requiring the npm modules you want to browserify. The name must end with `browserify.js`. For example:
+Create a JavaScript file requiring the npm modules you want to browserify. The name must end with `browserify.js`.
+NOTE: Due to [Meteor Issue #3985](https://github.com/meteor/meteor/issues/3985) we must put something before the extension, like: `app.browserify.js`.
+For example:
 
 ```javascript
 // without var it becomes an app (global) scoped variable
@@ -159,7 +163,7 @@ Add `cosmos:browserify`:
 
     $ meteor add cosmos:browserify
 
-It will browserify your `browserify.js` file and push it to the client.
+It will browserify your `app.browserify.js` file and push it to the client.
 
 #### 4. Verify it worked
 

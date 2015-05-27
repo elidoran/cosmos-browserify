@@ -8,6 +8,9 @@ stream     = Npm.require 'stream'
 
 processFile = (step) ->
 
+  # check for extension as filename
+  checkFilename step
+
   # when true it's dev, when false it's production
   debug = getDebug step
 
@@ -87,6 +90,12 @@ getBasedir = (step) ->
   # packages.json.
 
   return basedir
+
+checkFilename = (step) ->
+
+  if step.inputPath is 'browserify.js'
+    console.log 'WARNING: using \'browserify.js\' as full filename may stop working.' +
+      ' See Meteor Issue #3985. Please add something before it like: client.browserify.js'
 
 getDebug = ->
   debug = true
