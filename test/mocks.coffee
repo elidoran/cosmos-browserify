@@ -66,6 +66,10 @@ required =
       transform: (envify) -> Result.envify.transformed = true
     }
 
+  fs:
+    existsSync: -> false
+    readFileSync: -> null
+
 # mock this by returning our mock objects instead
 @Npm =
   require: (name) -> required[name]
@@ -94,7 +98,9 @@ required =
     return step
 
   # mock this function and get our plugin function to call
-  registerSourceHandler: (extension, fn) -> Plugin.fn = fn
+  registerSourceHandler: (extension, fn) ->
+    if extension is "browserify.js"
+      Plugin.fn = fn
 
 # don't use @Meteor as with other Mocks because `Meteor` exists in test client
 # instead, replace the wrapAsync with our version, which seems not to affect
