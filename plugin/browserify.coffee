@@ -104,7 +104,7 @@ getBasedir = (step) ->
   #   CompileStep has the absolute path to the file in `fullInputPath`
   #   CompileStep has the package/app relative path to the file in `inputPath`
   #   basedir is fullInputPath with inputPath replaced with the tail
-  basedir = step.fullInputPath.slice(0, -(step.inputPath.length)) + tail
+  basedir = step.fullInputPath[0...-(step.inputPath.length)] + tail
 
   # TODO: use fs.existsSync basedir
   # could print a more helpful message to user than the browserify error saying
