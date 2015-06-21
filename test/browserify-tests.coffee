@@ -60,6 +60,7 @@ Tinytest.add 'test processFile', (test) ->
   test.equal Result?.exorcist?.piped, 'exorcist'
   test.equal Result?.readFileSync?[file]?, true, 'should run fs.readFileSync on the source map file'
   test.equal Result?.readFileSync?[file]?.encoding, 'utf8'
+  test.equal Result?.unlinkSync, file
 
   # test what's given to CompileStep.addJavaScript
   test.equal compileStep?.js?, true, 'CompileStep should contain addJavaScript info'
@@ -150,6 +151,7 @@ Tinytest.add 'test options file', (test) ->
   test.equal Result?.exorcist?.piped, 'exorcist'
   test.equal Result?.readFileSync?[file]?, true, 'should run fs.readFileSync on the source map file'
   test.equal Result?.readFileSync?[file]?.encoding, 'utf8'
+  test.equal Result?.unlinkSync, file
 
   # test what's given to CompileStep.addJavaScript
   test.equal compileStep?.js?, true, 'CompileStep should contain addJavaScript info'

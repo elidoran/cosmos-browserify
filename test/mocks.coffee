@@ -92,6 +92,8 @@ required =
       else
         if Result?.optionsFile? then Result?.optionsFile else null
 
+    unlinkSync: (name) -> Result.unlinkSync = name
+
 
 # mock this by returning our mock objects instead
 @Npm =
