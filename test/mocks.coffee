@@ -62,8 +62,10 @@ required =
             if eventType is 'error' and Result?.errorWanted then fn 'test error'
         }
 
-      # we received the envify transform
-      transform: (envify) -> Result.envify.transformed = true
+      # store received transform name and options
+      transform: (transformName, transformOptions) ->
+        Result.transforms ?= {}
+        Result.transforms[transformName] = transformOptions
     }
 
   fs:
