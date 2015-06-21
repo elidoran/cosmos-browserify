@@ -13,47 +13,8 @@ processFile = (step) ->
   # check for extension as filename
   checkFilename step
 
-  # look for a file with the same name, but .browserify.options.json extension
-  optionsFileName = step.fullInputPath[0...-2] + 'options.json'
-
-  userOptions = {}
-  if fs.existsSync optionsFileName
-    try
-      userOptions = JSON.parse fs.readFileSync optionsFileName, 'utf8'
-    catch e
-      step.error
-        message: "Couldn't read JSON data"
-        sourcePath: step.inputPath
-
-  # used twice in creating defaultOptions
-  debug = getDebug()
-
-  # sane defaults for options; most important is the baseDir
-  defaultOptions =
-    # Browserify will look here for npm modules
-    basedir: getBasedir(step)
-
-    # TODO: look into this issue more. Created issue #8 for it
-    # comment from @stubailo:
-    #   Browserify automatically adds a source map comment
-    #   since in production mode Meteor automatically minifies away all comments,
-    #   it's safe to do this even in production builds
-    # comment by @elidoran:
-    #   something causes the file to be larger when debug is true for production.
-    #   Until I determine which is the proper behavior I prefer to maintain
-    #   the debug value based on whether it's a dev or prod build.
-    #   it can be overridden by the new per file options.
-    debug: debug
-
-    # let's put the defaults for envify transform in here as well
-    # TODO: have an option which disables using envify
-    transforms:
-      envify:
-        NODE_ENV: if debug then 'development' else 'production'
-        _:'purge'
-
-  # merge user options with defaults
-  browserifyOptions = _.defaults userOptions, defaultOptions
+  # get options for Browserify
+  browserifyOptions = getBrowserifyOptions step
 
   # create a browserify instance passing our readable stream as input,
   # and options object for debug and the basedir
@@ -90,7 +51,7 @@ processFile = (step) ->
     step.error
       message:e.toString().substring 7
       sourcePath: step.inputPath
-      
+
 
 # add our function as the handler for files ending in 'browserify.js'
 Plugin.registerSourceHandler 'browserify.js', processFile
@@ -129,6 +90,53 @@ getBasedir = (step) ->
   # packages.json.
 
   return basedir
+
+getBrowserifyOptions = (step) ->
+
+  # empty user options to fill from file, if it exists
+  userOptions = {}
+
+  # look for a file with the same name, but .browserify.options.json extension
+  optionsFileName = step.fullInputPath[0...-2] + 'options.json'
+
+  if fs.existsSync optionsFileName
+    try
+      # read json file and convert it into an object
+      userOptions = JSON.parse fs.readFileSync optionsFileName, 'utf8'
+    catch e
+      step.error
+        message: "Couldn't read JSON data"
+        sourcePath: step.inputPath
+
+  # used twice in creating defaultOptions
+  debug = getDebug()
+
+  # sane defaults for options; most important is the baseDir
+  defaultOptions =
+    # Browserify will look here for npm modules
+    basedir: getBasedir(step)
+
+    # TODO: look into this issue more. Created issue #8 for it
+    # comment from @stubailo:
+    #   Browserify automatically adds a source map comment
+    #   since in production mode Meteor automatically minifies away all comments,
+    #   it's safe to do this even in production builds
+    # comment by @elidoran:
+    #   something causes the file to be larger when debug is true for production.
+    #   Until I determine which is the proper behavior I prefer to maintain
+    #   the debug value based on whether it's a dev or prod build.
+    #   it can be overridden by the new per file options.
+    debug: debug
+
+    # put the defaults for envify transform in here as well
+    # TODO: have an option which disables using envify
+    transforms:
+      envify:
+        NODE_ENV: if debug then 'development' else 'production'
+        _:'purge'
+
+  # merge user options with defaults and return it
+  browserifyOptions = _.defaults userOptions, defaultOptions
 
 checkFilename = (step) ->
 
