@@ -26,6 +26,10 @@ Tinytest.add 'test processFile', (test) ->
   test.equal Result.passThrough.run, true, 'should create a new PassThrough'
   test.equal Result.passThrough.buffer, compileStep.readBuffer
 
+  # test fs checked for options file and returned it
+  test.equal Result?.existsSync, '/full/path/to/app/packages/file.browserify.options.json'
+  test.equal Result?.readFileSync?, false, 'shouldn\'t run fs.readFileSync'
+
   # test building browserify
   test.equal Result?.browserify?, true, 'must run browserify function'
   test.equal Result.browserify.array?, true, 'must have an array to browserify'
@@ -75,6 +79,10 @@ Tinytest.add 'test with browserify error', (test) ->
   test.equal compileStep?.readBuffer?, true, 'CompileStep.read() should be called'
   test.equal Result.passThrough.run, true, 'should create a new PassThrough'
   test.equal Result.passThrough.buffer, compileStep.readBuffer
+
+  # test fs checked for options file and returned it
+  test.equal Result?.existsSync, '/full/path/to/app/packages/file.browserify.options.json'
+  test.equal Result?.readFileSync?, false, 'shouldn\'t run fs.readFileSync'
 
   # test building browserify
   test.equal Result?.browserify?, true, 'must run browserify function'
