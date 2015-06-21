@@ -59,7 +59,7 @@ processFile = (step) ->
   # and options object for debug and the basedir
   browserify = Browserify [getReadable(step)], browserifyOptions
 
-  for transformName, transformOptions of browserifyOptions.transforms
+  for own transformName, transformOptions of browserifyOptions.transforms
     browserify.transform transformName, transformOptions
 
   # have browserify process the file and include all required modules.
