@@ -85,8 +85,12 @@ required =
       if Result?.optionsFile? then true else false
 
     readFileSync: (name, encoding) ->
-      Result.readFileSync = name:name, encoding:encoding
-      if Result?.optionsFile? then Result?.optionsFile else null
+      Result.readFileSync ?= {}
+      Result.readFileSync[name] = encoding:encoding
+      if name?[...-4] is '.map'
+        'source map'
+      else
+        if Result?.optionsFile? then Result?.optionsFile else null
 
 
 # mock this by returning our mock objects instead
@@ -108,6 +112,7 @@ required =
       inputPath: options?.inputPath ? 'file.browserify.js'
       fullInputPath:
         options?.fullInputPath ? '/full/path/to/app/packages/file.browserify.js'
+      pathForSourceMap: options?.pathForSourceMap ? 'file.browserify.js'
       packageName: if options?.noPackageName then null else (options?.packageName ? 'cosmos:test')
       # store the info into the step so it can be tested
       addJavaScript: (info) -> step.js = info
