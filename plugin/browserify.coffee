@@ -12,7 +12,7 @@ stream = Npm.require 'stream'
 fs = Npm.require 'fs'
 
 processFile = (step) ->
-  
+
   # check for extension as filename
   checkFilename step
 
@@ -119,31 +119,20 @@ getBrowserifyOptions = (step) ->
         message: "Couldn't read JSON data"
         sourcePath: step.inputPath
 
-  # used twice in creating defaultOptions
-  debug = getDebug()
-
   # sane defaults for options; most important is the baseDir
   defaultOptions =
     # Browserify will look here for npm modules
     basedir: getBasedir(step)
 
-    # TODO: look into this issue more. Created issue #8 for it
-    # comment from @stubailo:
-    #   Browserify automatically adds a source map comment
-    #   since in production mode Meteor automatically minifies away all comments,
-    #   it's safe to do this even in production builds
-    # comment by @elidoran:
-    #   something causes the file to be larger when debug is true for production.
-    #   Until I determine which is the proper behavior I prefer to maintain
-    #   the debug value based on whether it's a dev or prod build.
-    #   it can be overridden by the new per file options.
-    debug: debug
+    # must be true to produce source map which we extract via exorcist and
+    # provide to CompileStep
+    debug: true
 
     # put the defaults for envify transform in here as well
     # TODO: have an option which disables using envify
     transforms:
       envify:
-        NODE_ENV: if debug then 'development' else 'production'
+        NODE_ENV: if getDebug() then 'development' else 'production'
         _:'purge'
 
   # merge user options with defaults and return it
