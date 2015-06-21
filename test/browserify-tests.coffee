@@ -37,11 +37,10 @@ Tinytest.add 'test processFile', (test) ->
   test.equal Result.browserify.array[0]?.isTestPassThrough, true, 'should receive our test PassThrough'
   test.equal Result.browserify?.options, defaultOptions()
 
-  # test transform (only envify)
-  test.equal Result?.envify?.options?, true, 'envify should be called with options'
-  test.equal Result.envify.options.NODE_ENV, 'development' # testing dev mode only so far
-  test.equal Result.envify.options._, 'purge'
-  test.equal Result.envify.transformed, true, 'transform should be called with envify'
+  # test envify transform
+  test.equal Result?.transforms?.envify?, true, 'transform should be called with envify'
+  test.equal Result.transforms.envify?.NODE_ENV, 'development' # testing dev mode only so far
+  test.equal Result.transforms.envify?._, 'purge'
 
   # test bundling with browserify and reading its result
   test.equal Result.browserify?.bundle, true, 'must run browserify.bundle()'
@@ -90,6 +89,11 @@ Tinytest.add 'test with browserify error', (test) ->
   test.equal Result.browserify.array?.length, 1, 'browserify gets [readable], length should be 1'
   test.equal Result.browserify.array[0]?.isTestPassThrough, true, 'should receive our test PassThrough'
   test.equal Result.browserify?.options, defaultOptions()
+  
+  # test envify transform
+  test.equal Result?.transforms?.envify?, true, 'transform should be called with envify'
+  test.equal Result.transforms.envify?.NODE_ENV, 'development' # testing dev mode only so far
+  test.equal Result.transforms.envify?._, 'purge'
 
   # test bundling with browserify and reading its result
   test.equal Result.browserify?.bundle, true, 'must run browserify.bundle()'
