@@ -30,10 +30,17 @@ processFile = (step) ->
     # Browserify will look here for npm modules
     basedir: getBasedir(step)
 
-    # Browserify automatically adds a source map comment
-    # since in production mode Meteor automatically minifies away all comments,
-    # it's safe to do this even in production builds
-    debug: true
+    # TODO: look into this issue more. Created issue #8 for it
+    # comment from @stubailo:
+    #   Browserify automatically adds a source map comment
+    #   since in production mode Meteor automatically minifies away all comments,
+    #   it's safe to do this even in production builds
+    # comment by @elidoran:
+    #   something causes the file to be larger when debug is true for production.
+    #   Until I determine which is the proper behavior I prefer to maintain
+    #   the debug value based on whether it's a dev or prod build.
+    #   it can be overridden by the new per file options.
+    debug: getDebug()
 
   # merge user options with defaults
   browserifyOptions = _.defaults userOptions, defaultOptions
