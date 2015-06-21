@@ -29,6 +29,10 @@ required =
 
   'envify/custom': (options) -> Result.transforms.envify = options
 
+  'exorcist': (outputName, sourceMapURL) ->
+    Result.exorcist = name:outputName,url:sourceMapURL
+    return 'exorcist'
+
   # instead of the real browserify
   browserify: (array, options) ->
     # store into results
@@ -60,6 +64,11 @@ required =
 
             # only call the error() fn when we're testing an error
             if eventType is 'error' and Result?.errorWanted then fn 'test error'
+
+          # pipe to exorcist
+          pipe: (exorcist) ->
+            Result.exorcist.piped = exorcist
+            return this
         }
 
       # store received transform name and options
