@@ -10,7 +10,7 @@
 @process = argv:[]
 
 # store results for test to verify with test.equal
-@Result = {}
+@Result = transforms:{}
 
 # plugin calls 'new stream.PassThrough()' so give it a class to instantiate
 class PassThroughMock
@@ -64,7 +64,6 @@ required =
 
       # store received transform name and options
       transform: (transformName, transformOptions) ->
-        Result.transforms ?= {}
         if typeof transformName is 'string'
           Result.transforms[transformName] = transformOptions
         # else it's an object, so the envify object.
