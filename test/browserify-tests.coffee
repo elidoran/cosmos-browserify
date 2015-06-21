@@ -66,6 +66,7 @@ Tinytest.add 'test processFile', (test) ->
   test.equal compileStep.js.path, 'file.browserify.js'
   test.equal compileStep.js.sourcePath, 'file.browserify.js'
   test.equal compileStep.js.data, 'test data'
+  test.equal compileStep.js.sourceMap, 'source map'
 
 
 # test options file with debug=true and a transform
@@ -155,6 +156,7 @@ Tinytest.add 'test options file', (test) ->
   test.equal compileStep.js.path, 'file.browserify.js'
   test.equal compileStep.js.sourcePath, 'file.browserify.js'
   test.equal compileStep.js.data, 'test data'
+  test.equal compileStep.js.sourceMap, 'source map'
 
 
 # test an error in browserify
