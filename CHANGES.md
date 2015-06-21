@@ -1,3 +1,10 @@
+# 0.4.0 - UNPUBLISHED
+
+1. accepted [PR#7](https://github.com/elidoran/cosmos-browserify/pull/7) from [stubailo](https://github.com/stubailo) to allow options and using other transforms.
+2. allow the options file to override envify default options
+3. added exorcist use to extract source map from browserified file to supply to CompileStep
+4. added test for using an options file
+
 # 0.3.0 - 2015/05/26
 
 1. accepted [PR#5](https://github.com/elidoran/cosmos-browserify/pull/5) from [lourd](https://github.com/lourd) to use envify transform (thank you @lourd)
