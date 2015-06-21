@@ -27,7 +27,7 @@ required =
   # instead of node's stream module, all we need is PassThrough, give the mock
   stream: PassThrough:PassThroughMock
 
-  'envify/custom': (options) -> Result.envify = options:options
+  'envify/custom': (options) -> Result.transforms.envify = options
 
   # instead of the real browserify
   browserify: (array, options) ->
@@ -65,7 +65,11 @@ required =
       # store received transform name and options
       transform: (transformName, transformOptions) ->
         Result.transforms ?= {}
-        Result.transforms[transformName] = transformOptions
+        if typeof transformName is 'string'
+          Result.transforms[transformName] = transformOptions
+        # else it's an object, so the envify object.
+        # we already stored its options in the mock returned by require
+        # and transformOptions here is undefined. so, do nothing.
 
 
   fs:
