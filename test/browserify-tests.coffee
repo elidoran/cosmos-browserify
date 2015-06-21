@@ -1,4 +1,6 @@
-clearPreviousResults = -> delete Result[key] for key of Result
+clearPreviousResults = ->
+  delete Result[key] for key of Result
+  Result.transforms = {}
 
 defaultOptions = ->
   return options =
