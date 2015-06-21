@@ -3,13 +3,9 @@ clearPreviousResults = ->
   Result.transforms = {}
 
 defaultOptions = ->
-  return options =
-    basedir:'/full/path/to/app/packages/.npm/package'
-    debug:true
-    transforms:
-      envify:
-        NODE_ENV: 'development'
-        _:'purge'
+  basedir:'/full/path/to/app/packages/.npm/package'
+  debug:true
+  transforms:{}
 
 # test the usual successful run
 Tinytest.add 'test processFile', (test) ->
