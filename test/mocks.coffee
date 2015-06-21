@@ -87,7 +87,7 @@ required =
     readFileSync: (name, encoding) ->
       Result.readFileSync ?= {}
       Result.readFileSync[name] = encoding:encoding
-      if name?[...-4] is '.map'
+      if name?[-4...] is '.map'
         'source map'
       else
         if Result?.optionsFile? then Result?.optionsFile else null
