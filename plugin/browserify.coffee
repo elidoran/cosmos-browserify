@@ -43,7 +43,8 @@ processFile = (step) ->
 
   # extract the source map content from the generated file to give to Meteor
   # explicitly by piping bundle thru `exorcist`
-  bundle = bundle.pipe exorcist step.fullInputPath+'.map', step.pathForSourceMap
+  mapFileName = step.fullInputPath+'.map'
+  bundle = bundle.pipe exorcist mapFileName, step.pathForSourceMap
 
   # use Meteor.wrapAsync to wrap `getString` so it's done synchronously
   wrappedFn = Meteor.wrapAsync getString
@@ -53,7 +54,8 @@ processFile = (step) ->
     string = wrappedFn bundle
 
     # read the generated source map from the file
-    sourceMap = fs.readFileSync step.fullInputPath+'.map', 'utf8'
+    sourceMap = fs.readFileSync mapFileName, 'utf8'
+    fs.unlinkSync mapFileName
 
     # now that we have the compiled result as a string we can add it using CompileStep
     # inside try-catch because this shouldn't run when there's an error.
