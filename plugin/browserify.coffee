@@ -3,13 +3,16 @@ Browserify = Npm.require 'browserify'
 # use custom envify so we can specify the env based on the meteor command used
 envify = Npm.require 'envify/custom'
 
+# use exorcist transform to extract source map data
+exorcist = Npm.require 'exorcist'
+
 # get 'stream' to use PassThrough to provide a Buffer as a Readable stream
 stream = Npm.require 'stream'
 
 fs = Npm.require 'fs'
 
 processFile = (step) ->
-
+  
   # check for extension as filename
   checkFilename step
 
@@ -30,6 +33,10 @@ processFile = (step) ->
   # set the readable stream's encoding so we read strings from it
   bundle.setEncoding('utf8')
 
+  # extract the source map content from the generated file to give to Meteor
+  # explicitly by piping bundle thru `exorcist`
+  bundle = bundle.pipe exorcist step.fullInputPath+'.map', step.pathForSourceMap
+
   # use Meteor.wrapAsync to wrap `getString` so it's done synchronously
   wrappedFn = Meteor.wrapAsync getString
 
@@ -37,12 +44,16 @@ processFile = (step) ->
     # call our wrapped function with the readable stream as its argument
     string = wrappedFn bundle
 
+    # read the generated source map from the file
+    sourceMap = fs.readFileSync step.fullInputPath+'.map'
+
     # now that we have the compiled result as a string we can add it using CompileStep
     # inside try-catch because this shouldn't run when there's an error.
     step.addJavaScript
       path:       step.inputPath  # name of the file
       sourcePath: step.inputPath  # use same name, we've just browserified it
       data:       string          # the actual browserified results
+      sourceMap:  sourceMap
       bare:       step?.fileOptions?.bare
 
   catch e
