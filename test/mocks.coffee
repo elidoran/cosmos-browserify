@@ -38,12 +38,12 @@ required =
     # store into results
     Result.browserify = array: array, options: options
     # return this mock when browserify.bundle() is called
-    return it =
+    return browserifyObject =
       bundle: ->
         # store this was run
         Result.browserify.bundle = true
         # return a mock readable stream
-        return {
+        return bundleObject =
           # store the encoding it's told to use
           setEncoding: (encoding) -> Result.browserify.encoding = encoding
 
@@ -69,7 +69,6 @@ required =
           pipe: (exorcist) ->
             Result.exorcist.piped = exorcist
             return this
-        }
 
       # store received transform name and options
       transform: (transformName, transformOptions) ->
