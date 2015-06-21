@@ -49,6 +49,10 @@ Tinytest.add 'test processFile', (test) ->
   test.equal Result.browserify?.once?.end?, true, 'must call bundle.once \'end\''
   test.equal Result.browserify?.once?.error?, true, 'must call bundle.once \'error\''
 
+  # test error was *not* received by CompileStep#error()
+  test.equal Result?.errorReceived?, false, 'CompileStep should *not* receive an error'
+  test.equal Result?.errorReceived?.message, undefined
+
   # test what's given to CompileStep.addJavaScript
   test.equal compileStep?.js?, true, 'CompileStep should contain addJavaScript info'
   test.equal compileStep.js.path, 'file.browserify.js'
@@ -89,7 +93,7 @@ Tinytest.add 'test with browserify error', (test) ->
   test.equal Result.browserify.array?.length, 1, 'browserify gets [readable], length should be 1'
   test.equal Result.browserify.array[0]?.isTestPassThrough, true, 'should receive our test PassThrough'
   test.equal Result.browserify?.options, defaultOptions()
-  
+
   # test envify transform
   test.equal Result?.transforms?.envify?, true, 'transform should be called with envify'
   test.equal Result.transforms.envify?.NODE_ENV, 'development' # testing dev mode only so far
