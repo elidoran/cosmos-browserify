@@ -14,12 +14,12 @@ processFile = (step) ->
   checkFilename step
 
   # look for a file with the same name, but .browserify.options.json extension
-  optionsFile = step.fullInputPath[0...-2] + 'options.json'
+  optionsFileName = step.fullInputPath[0...-2] + 'options.json'
 
   userOptions = {}
-  if fs.existsSync optionsFile
+  if fs.existsSync optionsFileName
     try
-      userOptions = JSON.parse fs.readFileSync optionsFile, 'utf8'
+      userOptions = JSON.parse fs.readFileSync optionsFileName, 'utf8'
     catch e
       step.error
         message: "Couldn't read JSON data"
