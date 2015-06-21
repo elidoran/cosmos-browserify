@@ -23,8 +23,16 @@ processFile = (step) ->
   # and options object for debug and the basedir
   browserify = Browserify [getReadable(step)], browserifyOptions
 
+  # extract envify tranform's options so it isn't used in loop
+  envifyOptions = browserifyOptions.transforms.envify
+  delete browserifyOptions.transforms.envify
+
+  # run each transform
   for own transformName, transformOptions of browserifyOptions.transforms
     browserify.transform transformName, transformOptions
+
+  # run the envify transform
+  browserify.transform envify envifyOptions
 
   # have browserify process the file and include all required modules.
   # we receive a readable stream as the result
