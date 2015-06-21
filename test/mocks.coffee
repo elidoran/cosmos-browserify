@@ -34,7 +34,7 @@ required =
     # store into results
     Result.browserify = array: array, options: options
     # return this mock when browserify.bundle() is called
-    return {
+    return it =
       bundle: ->
         # store this was run
         Result.browserify.bundle = true
@@ -66,7 +66,7 @@ required =
       transform: (transformName, transformOptions) ->
         Result.transforms ?= {}
         Result.transforms[transformName] = transformOptions
-    }
+
 
   fs:
     existsSync: (name) ->
@@ -76,6 +76,7 @@ required =
     readFileSync: (name, encoding) ->
       Result.readFileSync = name:name, encoding:encoding
       if Result?.optionsFile? then Result?.optionsFile else null
+
 
 # mock this by returning our mock objects instead
 @Npm =
