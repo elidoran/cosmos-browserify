@@ -1,5 +1,14 @@
 clearPreviousResults = -> delete Result[key] for key of Result
 
+defaultOptions = ->
+  return options =
+    basedir:'/full/path/to/app/packages/.npm/package'
+    debug:true
+    transforms:
+      envify:
+        NODE_ENV: 'development'
+        _:'purge'
+
 # test the usual successful run
 Tinytest.add 'test processFile', (test) ->
 
@@ -22,8 +31,7 @@ Tinytest.add 'test processFile', (test) ->
   test.equal Result.browserify.array?, true, 'must have an array to browserify'
   test.equal Result.browserify.array?.length, 1, 'browserify gets [readable], length should be 1'
   test.equal Result.browserify.array[0]?.isTestPassThrough, true, 'should receive our test PassThrough'
-  options = debug:true, basedir:'/full/path/to/app/packages/.npm/package'
-  test.equal Result.browserify?.options, options
+  test.equal Result.browserify?.options, defaultOptions()
 
   # test transform (only envify)
   test.equal Result?.envify?.options?, true, 'envify should be called with options'
@@ -50,7 +58,7 @@ Tinytest.add 'test processFile', (test) ->
 Tinytest.add 'test with browserify error', (test) ->
 
   clearPreviousResults()
-  
+
   # cause it to use the on error callback
   Result.errorWanted = true
 
@@ -73,8 +81,7 @@ Tinytest.add 'test with browserify error', (test) ->
   test.equal Result.browserify.array?, true, 'must have an array to browserify'
   test.equal Result.browserify.array?.length, 1, 'browserify gets [readable], length should be 1'
   test.equal Result.browserify.array[0]?.isTestPassThrough, true, 'should receive our test PassThrough'
-  options = debug:true, basedir:'/full/path/to/app/packages/.npm/package'
-  test.equal Result.browserify?.options, options
+  test.equal Result.browserify?.options, defaultOptions()
 
   # test bundling with browserify and reading its result
   test.equal Result.browserify?.bundle, true, 'must run browserify.bundle()'
