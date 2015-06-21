@@ -665,11 +665,33 @@
               "version": "0.1.31",
               "dependencies": {
                 "amdefine": {
-                  "version": "0.1.0"
+                  "version": "0.1.1"
                 }
               }
             }
           }
+        }
+      }
+    },
+    "exorcist": {
+      "version": "0.4.0",
+      "dependencies": {
+        "minimist": {
+          "version": "0.0.5"
+        },
+        "mold-source-map": {
+          "version": "0.4.0",
+          "dependencies": {
+            "convert-source-map": {
+              "version": "1.1.1"
+            },
+            "through": {
+              "version": "2.2.7"
+            }
+          }
+        },
+        "nave": {
+          "version": "0.5.1"
         }
       }
     }
