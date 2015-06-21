@@ -25,8 +25,9 @@ Tinytest.add 'test processFile', (test) ->
   test.equal Result.passThrough.buffer, compileStep.readBuffer
 
   # test fs checked for options file and returned it
-  test.equal Result?.existsSync, '/full/path/to/app/packages/file.browserify.options.json'
-  test.equal Result?.readFileSync?, false, 'shouldn\'t run fs.readFileSync'
+  file = '/full/path/to/app/packages/file.browserify.options.json'
+  test.equal Result?.existsSync, file
+  test.equal Result?.readFileSync?[file]?, false, 'shouldn\'t run fs.readFileSync on options file'
 
   # test building browserify
   test.equal Result?.browserify?, true, 'must run browserify function'
@@ -94,9 +95,9 @@ Tinytest.add 'test options file', (test) ->
   test.equal Result.passThrough.buffer, compileStep.readBuffer
 
   # test fs checked for options file and returned it
-  test.equal Result?.existsSync, '/full/path/to/app/packages/file.browserify.options.json'
-  test.equal Result?.readFileSync?.name, '/full/path/to/app/packages/file.browserify.options.json'
-  test.equal Result?.readFileSync?.encoding, 'utf8'
+  file = '/full/path/to/app/packages/file.browserify.options.json'
+  test.equal Result?.existsSync, file
+  test.equal Result?.readFileSync?[file]?, true, 'should run fs.readFileSync on options file'
 
   # test building browserify
   test.equal Result?.browserify?, true, 'must run browserify function'
@@ -161,8 +162,9 @@ Tinytest.add 'test with browserify error', (test) ->
   test.equal Result.passThrough.buffer, compileStep.readBuffer
 
   # test fs checked for options file and returned it
-  test.equal Result?.existsSync, '/full/path/to/app/packages/file.browserify.options.json'
-  test.equal Result?.readFileSync?, false, 'shouldn\'t run fs.readFileSync'
+  file = '/full/path/to/app/packages/file.browserify.options.json'
+  test.equal Result?.existsSync, file
+  test.equal Result?.readFileSync?[file]?, false, 'shouldn\'t run fs.readFileSync on options file'
 
   # test building browserify
   test.equal Result?.browserify?, true, 'must run browserify function'
