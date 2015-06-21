@@ -9,7 +9,7 @@ Package.describe({
 Package.registerBuildPlugin({
   name: "CosmosBrowserify",
   // need 'meteor' for Npm and Meteor.wrapAsync
-  use: ['coffeescript@1.0.6','meteor'],
+  use: ['coffeescript@1.0.6', 'meteor', 'underscore'],
   sources: ['plugin/browserify.coffee'],
   npmDependencies: {"browserify": "9.0.8", "envify": "3.4.0"}
 });
@@ -17,7 +17,7 @@ Package.registerBuildPlugin({
 Package.onTest(function(api) {
   api.use('tinytest');
   // not testing by adding package in 'use'
-  api.use('coffeescript@1.0.6');
+  api.use(['coffeescript@1.0.6', 'underscore']);
   api.addFiles([
     // export stuff for use in Testing, and to Mock things like Npm
     //'test/export.js',

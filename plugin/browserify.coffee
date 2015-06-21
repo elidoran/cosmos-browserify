@@ -4,29 +4,50 @@ Browserify = Npm.require 'browserify'
 envify = Npm.require 'envify/custom'
 
 # get 'stream' to use PassThrough to provide a Buffer as a Readable stream
-stream     = Npm.require 'stream'
+stream = Npm.require 'stream'
+
+fs = Npm.require 'fs'
 
 processFile = (step) ->
 
   # check for extension as filename
   checkFilename step
 
-  # when true it's dev, when false it's production
-  debug = getDebug step
+  # look for a file with the same name, but .browserify.options.json extension
+  optionsFile = step.fullInputPath[0...-2] + 'options.json'
+
+  userOptions = {}
+  if fs.existsSync optionsFile
+    try
+      userOptions = JSON.parse fs.readFileSync optionsFile, 'utf8'
+    catch e
+      step.error
+        message: "Couldn't read JSON data"
+        sourcePath: step.inputPath
+
+  # sane defaults for options; most important is the baseDir
+  defaultOptions =
+    # Browserify will look here for npm modules
+    basedir: getBasedir(step)
+
+    # Browserify automatically adds a source map comment
+    # since in production mode Meteor automatically minifies away all comments,
+    # it's safe to do this even in production builds
+    debug: true
+
+  # merge user options with defaults
+  browserifyOptions = _.defaults userOptions, defaultOptions
 
   # create a browserify instance passing our readable stream as input,
   # and options object for debug and the basedir
-  browserify = Browserify [getReadable(step)],
-    # browserify options
-    basedir: getBasedir(step) # Browserify looks here for npm modules
-    debug: debug              # Browserify creates internal source map
+  browserify = Browserify [getReadable(step)], browserifyOptions
 
-  # TODO: enable per file options via BrowserifyConfig, or something like that
-  # TODO: allow options to specify transforms to run
+  for transformName, transformOptions of browserifyOptions.transforms
+    browserify.transform transformName, transformOptions
 
   # use the envify transform to replace instances of `process.env`
   # with strings
-  browserify.transform envify getEnvifyOptions debug, step
+  browserify.transform envify getEnvifyOptions getDebug(), step
 
   # have browserify process the file and include all required modules.
   # we receive a readable stream as the result
@@ -39,7 +60,6 @@ processFile = (step) ->
   wrappedFn = Meteor.wrapAsync getString
 
   try # try-catch for browserify errors
-
     # call our wrapped function with the readable stream as its argument
     string = wrappedFn bundle
 
@@ -58,6 +78,9 @@ processFile = (step) ->
 
 # add our function as the handler for files ending in 'browserify.js'
 Plugin.registerSourceHandler 'browserify.js', processFile
+
+# add a source handler for config files so that they are watched for changes
+Plugin.registerSourceHandler 'browserify.options.json', ->
 
 getBasedir = (step) ->
 

@@ -16,6 +16,8 @@
     2. [Create App browserify file](#2-create-app-browserify-file)
     3. [Enable browserify](#3-enable-browserify)
     4. [Verify success](#4-verify-it-worked)
+4. [Passing options to Browserify](#passing-options-to-browserify)
+    5. [Using transforms](#using-transforms)
 
 ## Example Meteor App
 
@@ -169,5 +171,51 @@ It will browserify your `app.browserify.js` file and push it to the client.
 
 In your browser's JavaScript console you can use the variable (`uppercase` if you followed my example).
 
+## Passing options to Browserify
+
+Browserify can be configured with additional options by adding a file with the same name as your `.browserify.js` file, but with the extension `.browserify.options.js`.
+
+```
+# example file structure:
+- app.browserify.js           # entry point
+- app.browserify.options.js   # options
+```
+
+You can use any [options that you can pass to the API](https://github.com/substack/node-browserify#browserifyfiles--opts).
+
+#### Using transforms
+
+To use a Browserify transform from NPM, add its package to your `packages.json` as described above; then pass it in the special `transform` option. This option is an object where the keys are the transform names, and the values are the options that can be passed to that transform.
+
+Below is an example of using the `exposify` transform to use a global React variable with React Router instead of the React package from NPM.
+
+##### packages.json
+
+```
+{
+  "react-router": "0.13.3",
+  "exposify": "0.4.3"
+}
+```
+##### app.browserify.js
+
+```js
+ReactRouter = require("react-router");
+```
+
+##### app.browserify.options.json
+
+```js
+{
+  "transforms": {
+    "exposify": {
+      "global": true,
+      "expose": {
+        "react": "React"
+      }
+    }
+  }
+}
+```
 
 ## MIT License
