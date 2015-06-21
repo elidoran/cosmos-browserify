@@ -218,4 +218,20 @@ ReactRouter = require("react-router");
 }
 ```
 
+#### Transforms in a Package
+
+Make Meteor watch the options file for updates by adding it to the API:
+
+```js
+// from example package in cosmos-browserify-example
+api.addFiles([
+    'client/example.html',    // show some example results
+    'client/example.coffee',  // package's Meteor script
+    'client.browserify.js',           // browserify file
+    'client.browserify.options.json'  // browserify options file
+  ],
+  'client'
+);
+```
+
 ## MIT License
