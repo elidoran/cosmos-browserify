@@ -143,8 +143,15 @@ getBrowserifyOptions = (step) ->
         NODE_ENV: if getDebug() then 'development' else 'production'
         _:'purge'
 
-  # merge user options with defaults and return it
-  browserifyOptions = _.defaults userOptions, defaultOptions
+  # merge user options with defaults
+  _.defaults userOptions, defaultOptions
+
+  # when they supply transforms it clobbers the envify defaults because
+  # _.defaults works only on top level keys.
+  # so, if there's no envify then set the default options for it
+  userOptions.transforms?.envify ?= defaultOptions.transforms.envify
+
+  return userOptions
 
 checkFilename = (step) ->
 
