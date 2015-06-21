@@ -1,3 +1,4 @@
+clearPreviousResults = -> delete Result[key] for key of Result
 
 # test the usual successful run
 Tinytest.add 'test processFile', (test) ->
@@ -48,6 +49,8 @@ Tinytest.add 'test processFile', (test) ->
 # test an error in browserify
 Tinytest.add 'test with browserify error', (test) ->
 
+  clearPreviousResults()
+  
   # cause it to use the on error callback
   Result.errorWanted = true
 
