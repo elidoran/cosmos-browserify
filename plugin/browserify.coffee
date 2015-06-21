@@ -62,10 +62,6 @@ processFile = (step) ->
   for transformName, transformOptions of browserifyOptions.transforms
     browserify.transform transformName, transformOptions
 
-  # use the envify transform to replace instances of `process.env`
-  # with strings
-  browserify.transform envify getEnvifyOptions getDebug(), step
-
   # have browserify process the file and include all required modules.
   # we receive a readable stream as the result
   bundle = browserify.bundle()
