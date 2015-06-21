@@ -67,8 +67,13 @@ required =
     }
 
   fs:
-    existsSync: -> false
-    readFileSync: -> null
+    existsSync: (name) ->
+      Result.existsSync = name
+      if Result?.optionsFile? then true else false
+
+    readFileSync: (name, encoding) ->
+      Result.readFileSync = name:name, encoding:encoding
+      if Result?.optionsFile? then Result?.optionsFile else null
 
 # mock this by returning our mock objects instead
 @Npm =
