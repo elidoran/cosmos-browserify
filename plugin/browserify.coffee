@@ -126,7 +126,7 @@ getBrowserifyOptions = (step) ->
       userOptions = JSON.parse fs.readFileSync optionsFileName, 'utf8'
     catch e
       step.error
-        message: "Couldn't read JSON data"
+        message: 'Couldn\'t read JSON data: '+e.toString()
         sourcePath: step.inputPath
 
   # sane defaults for options; most important is the baseDir
