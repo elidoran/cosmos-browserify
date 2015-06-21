@@ -52,6 +52,15 @@ Tinytest.add 'test processFile', (test) ->
   test.equal Result?.errorReceived?, false, 'CompileStep should *not* receive an error'
   test.equal Result?.errorReceived?.message, undefined
 
+  # test exorcist
+  file = '/full/path/to/app/packages/file.browserify.js.map'
+  test.equal Result?.exorcist?, true, 'exorcist should always be called'
+  test.equal Result?.exorcist?.name, file
+  test.equal Result?.exorcist?.url, 'file.browserify.js'
+  test.equal Result?.exorcist?.piped, 'exorcist'
+  test.equal Result?.readFileSync?[file]?, true, 'should run fs.readFileSync on the source map file'
+  test.equal Result?.readFileSync?[file]?.encoding, 'utf8'
+
   # test what's given to CompileStep.addJavaScript
   test.equal compileStep?.js?, true, 'CompileStep should contain addJavaScript info'
   test.equal compileStep.js.path, 'file.browserify.js'
@@ -131,6 +140,15 @@ Tinytest.add 'test options file', (test) ->
   # test error was *not* received by CompileStep#error()
   test.equal Result?.errorReceived?, false, 'CompileStep should *not* receive an error'
   test.equal Result?.errorReceived?.message, undefined
+
+  # test exorcist
+  file = '/full/path/to/app/packages/file.browserify.js.map'
+  test.equal Result?.exorcist?, true, 'exorcist should always be called'
+  test.equal Result?.exorcist?.name, file
+  test.equal Result?.exorcist?.url, 'file.browserify.js'
+  test.equal Result?.exorcist?.piped, 'exorcist'
+  test.equal Result?.readFileSync?[file]?, true, 'should run fs.readFileSync on the source map file'
+  test.equal Result?.readFileSync?[file]?.encoding, 'utf8'
 
   # test what's given to CompileStep.addJavaScript
   test.equal compileStep?.js?, true, 'CompileStep should contain addJavaScript info'
