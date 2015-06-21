@@ -53,7 +53,7 @@ processFile = (step) ->
     string = wrappedFn bundle
 
     # read the generated source map from the file
-    sourceMap = fs.readFileSync step.fullInputPath+'.map'
+    sourceMap = fs.readFileSync step.fullInputPath+'.map', 'utf8'
 
     # now that we have the compiled result as a string we can add it using CompileStep
     # inside try-catch because this shouldn't run when there's an error.
