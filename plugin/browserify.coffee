@@ -145,19 +145,6 @@ getDebug = ->
 
   return debug
 
-getEnvifyOptions = (debug, step) ->
-
-  envifyOptions =
-    NODE_ENV: if debug then 'development' else 'production'
-    # purge by default because we're running it this once
-    _: 'purge'
-
-  # TODO:
-  # use step to know which file we're processing so we can get config options
-  # for it and override env value, or purge value
-
-  return envifyOptions
-
 getReadable = (step) ->
 
   # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
