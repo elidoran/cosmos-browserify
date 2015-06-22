@@ -40,8 +40,8 @@ For a quick start, copy my functional [example package](https://github.com/elido
 Use standard Meteor package create and add:
 
 ```
-  $ meteor create --package cosmos:browserify-example
-  $ meteor add cosmos:browserify-example
+$ meteor create --package cosmos:browserify-example
+$ meteor add cosmos:browserify-example
 ```
 
 #### 2. Create browserify file
@@ -50,29 +50,29 @@ Create a JavaScript file requiring the npm modules you want to browserify. The f
 NOTE: Due to [Meteor Issue #3985](https://github.com/meteor/meteor/issues/3985) we must put something before the extension, like: `client.browserify.js`.
 Example content:
 
-```javascript
-  // without var it becomes a package scoped variable
-  uppercase = require('upper-case');
+```js
+// without var it becomes a package scoped variable
+uppercase = require('upper-case');
 ```
 
 #### 3. Update package.js
 
-```javascript
-  // Specify npm modules
-  Npm.depends({
-    'upper-case':'1.1.2'
-  });
+```js
+// Specify npm modules
+Npm.depends({
+  'upper-case':'1.1.2'
+});
 
-  Package.onUse(function(api) {
-    // add package
-    api.use(['cosmos:browserify@0.2.0'], 'client');
+Package.onUse(function(api) {
+  // add package
+  api.use(['cosmos:browserify@0.2.0'], 'client');
 
-	// add browserify file in step #2 with your package's client files
-    api.addFiles(['client.browserify.js', 'your/package/file.js'], 'client');
+  // add browserify file in step #2 with your package's client files
+  api.addFiles(['client.browserify.js', 'your/package/file.js'], 'client');
 
-    // OPTIONAL: make variable app (global) scoped:
-    api.export('uppercase', 'client');
-  });
+  // OPTIONAL: make variable app (global) scoped:
+  api.export('uppercase', 'client');
+});
 ```
 
 ##### Exporting to app
@@ -97,21 +97,21 @@ A. Use *View Source* to see the script tags Meteor is sending to your client.
 B. Find your package's script tag and click on it to view its source. For package `someuser:somepackage` there will be a script tag like this:
 
 ```html
-    <script type="text/javascript" src="/packages/someuser_somepackage.js?a5c324925e5f6e800a4"></script>
+<script type="text/javascript" src="/packages/someuser_somepackage.js?a5c324925e5f6e800a4"></script>
 ```
 
 C. Find your package's browserify script. If your package was `someuser:somepackage` and the file named `client.browserify.js` then you'd look for a block like this:
 
-```javascript
-  ////////////////////////////////////////////////////////
-  // packages/someuser:somepackage/client.browserify.js //
-  ////////////////////////////////////////////////////////
+```js
+////////////////////////////////////////////////////////
+// packages/someuser:somepackage/client.browserify.js //
+////////////////////////////////////////////////////////
 ```
 D. Ensure the variable you want is in the package scoped area. If you're looking for a variable named `uppercase` then you'd see this:
 
-```javascript
-  /* Package-scope variables */
-  var uppercase, __coffeescriptShare;
+```js
+/* Package-scope variables */
+var uppercase, __coffeescriptShare;
 ```
 
 Note: I always use coffeescript, so there's always the `__coffeescriptShare` there. I'm not sure if it's always there or not.
@@ -121,8 +121,8 @@ Note: I always use coffeescript, so there's always the `__coffeescriptShare` the
 
 In your package's client scripts you have access to all package scoped variables, including those browserified. For example:
 
-```javascript
-  console.log("uppercase('some text') = ", uppercase('some text'));
+```js
+console.log("uppercase('some text') = ", uppercase('some text'));
 ```
 
 
@@ -137,11 +137,13 @@ It is possible to make browserified variables app (global) scoped by exporting t
 
 Meteor doesn't support npm modules at the app level. Fortunately, you can add the ability with the [meteorhacks:npm](http://github.com/meteorhacks/npm) package.
 
-    $ meteor add meteorhacks:npm
+```sh
+$ meteor add meteorhacks:npm
+```
 
 The first time your app runs (or if it's running when you add the package) it will create a `packages.json` file in the root of your app. Specify the modules in `packages.json`. For example:
 
-```javascript
+```js
 {
   "upper-case" : "1.1.2"
 }
@@ -153,7 +155,7 @@ Create a JavaScript file requiring the npm modules you want to browserify. The n
 NOTE: Due to [Meteor Issue #3985](https://github.com/meteor/meteor/issues/3985) we must put something before the extension, like: `app.browserify.js`.
 For example:
 
-```javascript
+```js
 // without var it becomes an app (global) scoped variable
 uppercase = require('upper-case');
 ```
@@ -163,7 +165,9 @@ uppercase = require('upper-case');
 
 Add `cosmos:browserify`:
 
-    $ meteor add cosmos:browserify
+```sh
+$ meteor add cosmos:browserify
+```
 
 It will browserify your `app.browserify.js` file and push it to the client.
 
