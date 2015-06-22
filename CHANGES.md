@@ -1,4 +1,4 @@
-# 0.4.0 - UNPUBLISHED
+# 0.4.0 - 2015/06/21
 
 1. accepted [PR#7](https://github.com/elidoran/cosmos-browserify/pull/7) from [stubailo](https://github.com/stubailo) to allow options and using other transforms.
 2. allow the options file to override envify default options
