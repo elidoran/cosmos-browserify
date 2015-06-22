@@ -1,3 +1,7 @@
+# 0.5.0 - Unpublished
+
+1. update browserify to 10.2.4 from 9.0.8. Test pass, apps work. Seems fine.
+
 # 0.4.0 - 2015/06/21
 
 1. accepted [PR#7](https://github.com/elidoran/cosmos-browserify/pull/7) from [stubailo](https://github.com/stubailo) to allow options and using other transforms.
