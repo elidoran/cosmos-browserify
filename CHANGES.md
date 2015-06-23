@@ -8,6 +8,7 @@
 2. allow the options file to override envify default options
 3. added exorcist use to extract source map from browserified file to supply to CompileStep
 4. added test for using an options file
+5. accepted [PR#9](https://github.com/elidoran/cosmos-browserify/pull/9) from [stubailo](https://github.com/stubailo) removing extra indentation from some of the README's code blocks
 
 # 0.3.0 - 2015/05/26
 
