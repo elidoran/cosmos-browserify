@@ -47,8 +47,9 @@ processFile = (step) ->
   bundle = bundle.pipe exorcist mapFileName, step.pathForSourceMap
 
   try # try-catch for browserify errors
-    # call our wrapped function with the readable stream as its argument
-    string = getString bundle
+
+    # get browserify result from either the cache or processing
+    string = getResult step, bundle
 
     # read the generated source map from the file
     sourceMap = fs.readFileSync mapFileName, encoding:'utf8'
@@ -77,6 +78,36 @@ Plugin.registerSourceHandler 'browserify.js', processFile
 # add a source handler for config files so that they are watched for changes
 Plugin.registerSourceHandler 'browserify.options.json', ->
 
+checkFileChanges = (step) ->
+  # we must rebuild when:
+  #  1. we don't have cached results
+  #  2. files have changed which may alter the build:
+  #    a. the browserify.js file
+  #    b. the browserify.options.json file
+  #    c. the npm-shrinkwrap.json file
+  #    d. the package.js file ?
+
+  # to use cached version we must:
+  #  1. have the cached file
+  #  2. have the cached source map file
+
+  # if we don't have cached results then we rebuild (return true)
+  unless fs.existsSync(step.fullInputPath + '.cached') and
+    fs.existsSync(step.fullInputPath + '.map')
+      return true
+
+  cachedTime = fs.statSync(step.fullInputPath + '.cached').mtime.getTime()
+
+  # if any of the files has changed then we rebuild (return true)
+  for file in getFilesToCheck(step)
+    # if it's a different time, then we rebuild (return true)
+    if fs.existsSync(file)
+      modifiedTime = fs.statSync(file).mtime.getTime()
+      if cachedTime < modifiedTime
+        return true
+
+  # no changes so we can use the cached version (return false)
+  return false
 checkFilename = (step) ->
 
   if step.inputPath is 'browserify.js'
@@ -170,6 +201,13 @@ getDebug = ->
 
   return debug
 
+# watch the browserify files and the npm file
+getFilesToCheck = (step) -> [
+    step.fullInputPath                           # browserify file
+    step.fullInputPath[...-3] + '.options.json'  # options file
+    getBasedir(step) + '/npm-shrinkwrap.json'    # npm modules used
+  ]
+
 getReadable = (step) ->
 
   # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
@@ -181,6 +219,23 @@ getReadable = (step) ->
   readable.end step.read()
 
   return readable
+
+# get compile result via cache or compiling
+getResult = (step, bundle) ->
+  cacheFileName = step.fullInputPath + '.cached'
+  compileChanges = checkFileChanges step
+
+  if compileChanges
+    # call our wrapped function with the readable stream as its argument
+    string = getString bundle #wrappedFn bundle
+
+    # write result to a cache file
+    fs.writeFileSync cacheFileName, string
+
+  else
+    string = fs.readFileSync cacheFileName, encoding:'utf8'
+
+  return string
 
 # async function for reading entire bundle output into a string
 # wrap to convert to a synchronous function
