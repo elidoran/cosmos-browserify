@@ -2,6 +2,8 @@
 
 1. update browserify to 10.2.4 from 9.0.8. Test pass, apps work. Seems fine.
 2. accepted [PR#9](https://github.com/elidoran/cosmos-browserify/pull/9) from [stubailo](https://github.com/stubailo) removing extra indentation from some of the README's code blocks
+3. caching both browserified result and its source map file to reuse unless rebuild is needed. See [Issue #11](https://github.com/elidoran/cosmos-browserify/issues/11)
+4. README recommends app browserify file in client folder to avoid running twice
 
 # 0.4.0 - 2015/06/21
 
