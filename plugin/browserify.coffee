@@ -52,7 +52,7 @@ processFile = (step) ->
 
     # read the generated source map from the file
     sourceMap = fs.readFileSync mapFileName, 'utf8'
-    fs.unlinkSync mapFileName
+    # leave source map file so it's cached
 
     # now that we have the compiled result as a string we can add it using CompileStep
     # inside try-catch because this shouldn't run when there's an error.
