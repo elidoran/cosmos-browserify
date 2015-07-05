@@ -78,7 +78,7 @@ Plugin.registerSourceHandler 'browserify.js', processFile
 # add a source handler for config files so that they are watched for changes
 Plugin.registerSourceHandler 'browserify.options.json', ->
 
-checkFileChanges = (step) ->
+checkFileChanges = (step, cacheFileName) ->
   # we must rebuild when:
   #  1. we don't have cached results
   #  2. files have changed which may alter the build:
@@ -92,22 +92,27 @@ checkFileChanges = (step) ->
   #  2. have the cached source map file
 
   # if we don't have cached results then we rebuild (return true)
-  unless fs.existsSync(step.fullInputPath + '.cached') and
+  unless fs.existsSync(cacheFileName) and
     fs.existsSync(step.fullInputPath + '.map')
       return true
 
-  cachedTime = fs.statSync(step.fullInputPath + '.cached').mtime.getTime()
+  # get the modified time of the cache file as an integer
+  # NOTE: could use created time...
+  cachedTime = fs.statSync(cacheFileName).mtime.getTime()
 
   # if any of the files has changed then we rebuild (return true)
   for file in getFilesToCheck(step)
-    # if it's a different time, then we rebuild (return true)
+    # if the file exists (options file may not exist)
     if fs.existsSync(file)
+      # get the modified time as an integer
       modifiedTime = fs.statSync(file).mtime.getTime()
+      # if it's a different time, then we rebuild (return true)
       if cachedTime < modifiedTime
         return true
 
   # no changes so we can use the cached version (return false)
   return false
+
 checkFilename = (step) ->
 
   if step.inputPath is 'browserify.js'
@@ -223,7 +228,7 @@ getReadable = (step) ->
 # get compile result via cache or compiling
 getResult = (step, bundle) ->
   cacheFileName = step.fullInputPath + '.cached'
-  compileChanges = checkFileChanges step
+  compileChanges = checkFileChanges step, cacheFileName
 
   if compileChanges
     # call our wrapped function with the readable stream as its argument
