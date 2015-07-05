@@ -46,12 +46,9 @@ processFile = (step) ->
   mapFileName = step.fullInputPath+'.map'
   bundle = bundle.pipe exorcist mapFileName, step.pathForSourceMap
 
-  # use Meteor.wrapAsync to wrap `getString` so it's done synchronously
-  wrappedFn = Meteor.wrapAsync getString
-
   try # try-catch for browserify errors
     # call our wrapped function with the readable stream as its argument
-    string = wrappedFn bundle
+    string = getString bundle
 
     # read the generated source map from the file
     sourceMap = fs.readFileSync mapFileName, 'utf8'
@@ -186,7 +183,8 @@ getReadable = (step) ->
   return readable
 
 # async function for reading entire bundle output into a string
-getString = (bundle, cb) ->
+# wrap to convert to a synchronous function
+getString = Meteor.wrapAsync (bundle, cb) ->
 
   # holds all data read from bundle
   string = ''
