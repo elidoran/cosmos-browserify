@@ -77,6 +77,12 @@ Plugin.registerSourceHandler 'browserify.js', processFile
 # add a source handler for config files so that they are watched for changes
 Plugin.registerSourceHandler 'browserify.options.json', ->
 
+checkFilename = (step) ->
+
+  if step.inputPath is 'browserify.js'
+    console.log 'WARNING: using \'browserify.js\' as full filename may stop working.' +
+      ' See Meteor Issue #3985. Please add something before it like: client.browserify.js'
+
 getBasedir = (step) ->
 
   # basedir should point to the '.npm/package' folder containing the npm modules.
@@ -151,12 +157,6 @@ getBrowserifyOptions = (step) ->
   userOptions.transforms?.envify ?= defaultOptions.transforms.envify
 
   return userOptions
-
-checkFilename = (step) ->
-
-  if step.inputPath is 'browserify.js'
-    console.log 'WARNING: using \'browserify.js\' as full filename may stop working.' +
-      ' See Meteor Issue #3985. Please add something before it like: client.browserify.js'
 
 getDebug = ->
   debug = true
