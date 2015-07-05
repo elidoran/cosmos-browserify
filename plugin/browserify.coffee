@@ -51,7 +51,7 @@ processFile = (step) ->
     string = getString bundle
 
     # read the generated source map from the file
-    sourceMap = fs.readFileSync mapFileName, 'utf8'
+    sourceMap = fs.readFileSync mapFileName, encoding:'utf8'
     # leave source map file so it's cached
 
     # now that we have the compiled result as a string we can add it using CompileStep
