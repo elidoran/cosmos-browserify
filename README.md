@@ -152,14 +152,18 @@ The first time your app runs (or if it's running when you add the package) it wi
 #### 2. Create app browserify file
 
 Create a JavaScript file requiring the npm modules you want to browserify. The name must end with `browserify.js`.
-NOTE: Due to [Meteor Issue #3985](https://github.com/meteor/meteor/issues/3985) we must put something before the extension, like: `app.browserify.js`.
-For example:
+
+Example content:
 
 ```js
 // without var it becomes an app (global) scoped variable
 uppercase = require('upper-case');
 ```
 
+NOTE:
+
+1. Due to [Meteor Issue #3985](https://github.com/meteor/meteor/issues/3985) we must put something before the extension, like: `app.browserify.js`.
+2. When the file is outside the `client` folder Meteor runs the browserify plugin twice, once for client and once for server. I recommend putting the file inside `client`. It is a client-only file anyway.
 
 #### 3. Enable browserify
 
