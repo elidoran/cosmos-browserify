@@ -12,7 +12,7 @@ stream = Npm.require 'stream'
 fs = Npm.require 'fs'
 
 processFile = (step) ->
-
+  
   # check for extension as filename
   checkFilename step
 
@@ -49,11 +49,13 @@ processFile = (step) ->
   try # try-catch for browserify errors
 
     # get browserify result from either the cache or processing
-    string = getResult step, bundle
+    string = getResult step, bundle, browserifyOptions?.cache
 
     # read the generated source map from the file
     sourceMap = fs.readFileSync mapFileName, encoding:'utf8'
-    # leave source map file so it's cached
+    # delete source map file only when caching is off
+    # otherwise leave it "cached"
+    if browserifyOptions?.cache is false then fs.unlinkSync mapFileName
 
     # now that we have the compiled result as a string we can add it using CompileStep
     # inside try-catch because this shouldn't run when there's an error.
@@ -226,19 +228,33 @@ getReadable = (step) ->
   return readable
 
 # get compile result via cache or compiling
-getResult = (step, bundle) ->
-  cacheFileName = step.fullInputPath + '.cached'
-  compileChanges = checkFileChanges step, cacheFileName
+# step : CompileStep
+# bundle: the Browserify made readable stream
+# useCache: true by default, specifies whether caching will be used
+getResult = (step, bundle, useCache = true) ->
 
-  if compileChanges
-    # call our wrapped function with the readable stream as its argument
-    string = getString bundle #wrappedFn bundle
+  # TODO: getString line is in there twice. revise to eliminate duplication?
 
-    # write result to a cache file
-    fs.writeFileSync cacheFileName, string
+  # if caching isn't turned off in options
+  if useCache
+    console.log '\n  caching is ON\n'
+    cacheFileName = step.fullInputPath + '.cached'
+    # checks if files have changed or we don't have cached values
+    compileChanges = checkFileChanges step, cacheFileName
 
-  else
-    string = fs.readFileSync cacheFileName, encoding:'utf8'
+    if compileChanges
+      # call our wrapped function with the readable stream as its argument
+      string = getString bundle
+
+      # write result to a cache file
+      fs.writeFileSync cacheFileName, string
+
+    else # read the cached file instead
+      string = fs.readFileSync cacheFileName, encoding:'utf8'
+
+  else # call our wrapped function with the readable stream as its argument
+    console.log '\n  caching is off\n'
+    string = getString bundle
 
   return string
 
