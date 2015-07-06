@@ -181,12 +181,12 @@ In your browser's JavaScript console you can use the variable (`uppercase` if yo
 
 ## Passing options to Browserify
 
-Browserify can be configured with additional options by adding a file with the same name as your `.browserify.js` file, but with the extension `.browserify.options.js`.
+Browserify can be configured with additional options by adding a file with the same name as your `.browserify.js` file, but with the extension `.browserify.options.json`.
 
 ```
 # example file structure:
-- app.browserify.js           # entry point
-- app.browserify.options.js   # options
+- app.browserify.js             # entry point
+- app.browserify.options.json   # options
 ```
 
 You can use any [options that you can pass to the API](https://github.com/substack/node-browserify#browserifyfiles--opts).
