@@ -262,11 +262,11 @@ You may disable caching using the options file and the `cache` option:
 
 ## Reporting an Issue
 
-When reporting an issue consider:
+When reporting an issue consider showing:
 
-1. show the npm modules you're browserifying via the app's packages.json or package.js's Npm.depends() call
-2. show the browserify.js file, at least the require calls portion
-3. show the browserify.options.json file
+1. the npm modules you're browserifying via the app's packages.json or package.js's Npm.depends() call
+2. the browserify.js file, at least the require calls portion
+3. the browserify.options.json file
 4. the error
 
 ## MIT License
