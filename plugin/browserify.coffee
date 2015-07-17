@@ -12,7 +12,7 @@ stream = Npm.require 'stream'
 fs = Npm.require 'fs'
 
 processFile = (step) ->
-  
+
   # check for extension as filename
   checkFilename step
 
@@ -44,12 +44,13 @@ processFile = (step) ->
   # extract the source map content from the generated file to give to Meteor
   # explicitly by piping bundle thru `exorcist`
   mapFileName = step.fullInputPath+'.map'
-  bundle = bundle.pipe exorcist mapFileName, step.pathForSourceMap
+  exorcisedBundle = bundle.pipe exorcist mapFileName, step.pathForSourceMap
+  exorcisedBundle.originalBundle = bundle
 
   try # try-catch for browserify errors
 
     # get browserify result from either the cache or processing
-    string = getResult step, bundle, browserifyOptions?.cache
+    string = getResult step, exorcisedBundle, browserifyOptions?.cache
 
     # read the generated source map from the file
     sourceMap = fs.readFileSync mapFileName, encoding:'utf8'
@@ -272,4 +273,8 @@ getString = Meteor.wrapAsync (bundle, cb) ->
   bundle.once 'end', -> cb undefined, string  # undefined = error
 
   # when there's an error, give it to the callback
-  bundle.once 'error', (error) -> cb error
+  # NOTE:
+  #  after piping bundle into exorcist transform the once('error') doesn't
+  #  work. fixed it by storing original bundle as a property and registering
+  #  the event callback on that instead.  
+  bundle.originalBundle.once 'error', (error) -> cb error
