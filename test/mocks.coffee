@@ -65,9 +65,10 @@ required =
             # only call the error() fn when we're testing an error
             if eventType is 'error' and Result?.errorWanted then fn 'test error'
 
-          # pipe to exorcist
-          pipe: (exorcist) ->
-            Result.exorcist.piped = exorcist
+          # pipe to exorcist / writable stream (cache file)
+          pipe: (to) ->
+            Result.piped ?= []
+            Result.piped.push to
             return this
 
       # store received transform name and options
@@ -81,19 +82,26 @@ required =
 
   fs:
     existsSync: (name) ->
-      Result.existsSync = name
-      if Result?.optionsFile? then true else false
+      Result.existsSync ?= {}
+      Result.existsSync[name] = true
+      if name is '/full/path/to/app/packages/file.browserify.options.json'
+        return Result?.optionsFile?
+      if name is '/full/path/to/app/packages/file.browserify.js.cached'
+        return Result?.cacheFile?
 
-    readFileSync: (name, encoding) ->
+      return false
+
+    readFileSync: (name, options) ->
       Result.readFileSync ?= {}
-      Result.readFileSync[name] = encoding:encoding
+      Result.readFileSync[name] = options
       if name?[-4...] is '.map'
         'source map'
       else
         if Result?.optionsFile? then Result?.optionsFile else null
 
-    unlinkSync: (name) -> Result.unlinkSync = name
-
+    createWriteStream: (fileName, options) ->
+      Result.writeStream = name:fileName, options:options
+      return 'cache write stream'
 
 # mock this by returning our mock objects instead
 @Npm =

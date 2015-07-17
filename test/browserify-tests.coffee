@@ -26,7 +26,7 @@ Tinytest.add 'test processFile', (test) ->
 
   # test fs checked for options file and returned it
   file = '/full/path/to/app/packages/file.browserify.options.json'
-  test.equal Result?.existsSync, file
+  test.equal Result?.existsSync?[file], true
   test.equal Result?.readFileSync?[file]?, false, 'shouldn\'t run fs.readFileSync on options file'
 
   # test building browserify
@@ -54,13 +54,13 @@ Tinytest.add 'test processFile', (test) ->
 
   # test exorcist
   file = '/full/path/to/app/packages/file.browserify.js.map'
-  test.equal Result?.exorcist?, true, 'exorcist should always be called'
+  test.equal Result?.exorcist?, true, 'exorcist should always be used'
   test.equal Result?.exorcist?.name, file
   test.equal Result?.exorcist?.url, 'file.browserify.js'
-  test.equal Result?.exorcist?.piped, 'exorcist'
+  test.equal Result?.piped?[0], 'exorcist', 'exorcist should always be piped to'
   test.equal Result?.readFileSync?[file]?, true, 'should run fs.readFileSync on the source map file'
   test.equal Result?.readFileSync?[file]?.encoding, 'utf8'
-  test.equal Result?.unlinkSync, file
+  #test.equal Result?.unlinkSync, file
 
   # test what's given to CompileStep.addJavaScript
   test.equal compileStep?.js?, true, 'CompileStep should contain addJavaScript info'
@@ -107,7 +107,7 @@ Tinytest.add 'test options file', (test) ->
 
   # test fs checked for options file and returned it
   file = '/full/path/to/app/packages/file.browserify.options.json'
-  test.equal Result?.existsSync, file
+  test.equal Result?.existsSync?[file], true
   test.equal Result?.readFileSync?[file]?, true, 'should run fs.readFileSync on options file'
 
   # test building browserify
@@ -145,13 +145,13 @@ Tinytest.add 'test options file', (test) ->
 
   # test exorcist
   file = '/full/path/to/app/packages/file.browserify.js.map'
-  test.equal Result?.exorcist?, true, 'exorcist should always be called'
+  test.equal Result?.exorcist?, true, 'exorcist should always be used'
   test.equal Result?.exorcist?.name, file
   test.equal Result?.exorcist?.url, 'file.browserify.js'
-  test.equal Result?.exorcist?.piped, 'exorcist'
+  test.equal Result?.piped?[0], 'exorcist'
   test.equal Result?.readFileSync?[file]?, true, 'should run fs.readFileSync on the source map file'
   test.equal Result?.readFileSync?[file]?.encoding, 'utf8'
-  test.equal Result?.unlinkSync, file
+  #test.equal Result?.unlinkSync, file
 
   # test what's given to CompileStep.addJavaScript
   test.equal compileStep?.js?, true, 'CompileStep should contain addJavaScript info'
@@ -185,7 +185,7 @@ Tinytest.add 'test with browserify error', (test) ->
 
   # test fs checked for options file and returned it
   file = '/full/path/to/app/packages/file.browserify.options.json'
-  test.equal Result?.existsSync, file
+  test.equal Result?.existsSync?[file], true
   test.equal Result?.readFileSync?[file]?, false, 'shouldn\'t run fs.readFileSync on options file'
 
   # test building browserify
