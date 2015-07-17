@@ -11,7 +11,7 @@ Package.registerBuildPlugin({
   // need 'meteor' for Npm and Meteor.wrapAsync
   use: ['coffeescript@1.0.6', 'meteor', 'underscore@1.0.3'],
   sources: ['plugin/browserify.coffee'],
-  npmDependencies: {"browserify": "10.2.4", "envify":"3.4.0", "exorcist":"0.4.0"}
+  npmDependencies: {"browserify": "10.2.6", "envify":"3.4.0", "exorcist":"0.4.0"}
 });
 
 Package.onTest(function(api) {
