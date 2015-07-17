@@ -17,7 +17,9 @@
     3. [Enable browserify](#3-enable-browserify)
     4. [Verify success](#4-verify-it-worked)
 4. [Passing options to Browserify](#passing-options-to-browserify)
-    5. [Using transforms](#using-transforms)
+    1. [Using transforms](#using-transforms)
+5. [Caching Result](#caching-result)
+6. [Reporting an Issue](#reporting-an-issue)
 
 ## Example Meteor App
 
@@ -241,5 +243,29 @@ api.addFiles([
   'client'
 );
 ```
+
+## Caching Result
+
+As of 0.5.0 the browserify result is cached and regenerated only when files affecting it have changed:
+
+1. *.browserify.js
+2. *.browserify.options.json
+3. .npm/package/npm-shrinkwrap.json - means the npm modules may have changed
+
+You may disable caching using the options file and the `cache` option:
+
+```
+{
+  "cache" : false
+}
+```
+
+## Reporting an Issue
+
+When reporting an issue consider:
+
+1. show the npm modules you're browserifying via the app's packages.json or package.js's Npm.depends() call
+2. show the browserify.js file, at least the require calls portion
+3. the error
 
 ## MIT License

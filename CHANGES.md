@@ -5,6 +5,7 @@
 3. caching both browserified result and its source map file to reuse unless rebuild is needed. See [Issue #11](https://github.com/elidoran/cosmos-browserify/issues/11)
 4. README recommends app browserify file in client folder to avoid running twice
 5. accepted [PR#12](https://github.com/elidoran/cosmos-browserify/pull/12) from [optilude](https://github.com/optilude) correcting options file extension type in README. Thank you optilude.
+6. fixed catching browserify errors which was broken by 0.4.0
 
 # 0.4.0 - 2015/06/21
 
