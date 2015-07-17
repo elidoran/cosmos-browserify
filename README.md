@@ -23,9 +23,7 @@
 
 ## Example Meteor App
 
-Look at [cosmos-browserify-example](http://github.com/elidoran/cosmos-browserify-example)
-for a complete working Meteor app example. Look at a [package in the app](http://github.com/elidoran/cosmos-browserify-example/tree/master/packages/browserify-example)
-to see how to make one.
+Look at [cosmos-browserify-example](http://github.com/elidoran/cosmos-browserify-example) for a complete working Meteor app example. Look at a [package in the app](http://github.com/elidoran/cosmos-browserify-example/tree/master/packages/browserify-example) to see how to make one.
 
 
 ## Use in a Meteor Package
