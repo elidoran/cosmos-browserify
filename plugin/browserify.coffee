@@ -238,23 +238,26 @@ getResult = (step, bundle, useCache = true) ->
 
   # if caching isn't turned off in options
   if useCache
-    console.log '\n  caching is ON\n'
     cacheFileName = step.fullInputPath + '.cached'
     # checks if files have changed or we don't have cached values
     compileChanges = checkFileChanges step, cacheFileName
 
     if compileChanges
+      # instead of writing the string result to the file after we have gathered
+      # it all, let's pipe the result into the cache file while we're gathering
+      # all the data for our string result
+      cacheFileStream = fs.createWriteStream cacheFileName,
+        flags:'w'
+        encoding:'utf8'
+      bundle.pipe cacheFileStream
+
       # call our wrapped function with the readable stream as its argument
       string = getString bundle
-
-      # write result to a cache file
-      fs.writeFileSync cacheFileName, string
 
     else # read the cached file instead
       string = fs.readFileSync cacheFileName, encoding:'utf8'
 
   else # call our wrapped function with the readable stream as its argument
-    console.log '\n  caching is off\n'
     string = getString bundle
 
   return string
