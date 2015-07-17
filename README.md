@@ -266,6 +266,7 @@ When reporting an issue consider:
 
 1. show the npm modules you're browserifying via the app's packages.json or package.js's Npm.depends() call
 2. show the browserify.js file, at least the require calls portion
-3. the error
+3. show the browserify.options.json file
+4. the error
 
 ## MIT License
