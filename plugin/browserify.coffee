@@ -12,6 +12,8 @@ stream = Npm.require 'stream'
 fs = Npm.require 'fs'
 
 processFile = (step) ->
+  started = Date.now()
+  console.log "\n\n  procesFile starting... #{step.inputPath}"
 
   # check for extension as filename
   checkFilename step
@@ -41,32 +43,50 @@ processFile = (step) ->
   # set the readable stream's encoding so we read strings from it
   bundle.setEncoding('utf8')
 
+  # don't create a map when mode is 'gen' ...?
+  # we still need to extract it... just, send it to a stream which eats it up
+  # instead of passing it somewhere... can't tho. ugh.
+
   # extract the source map content from the generated file to give to Meteor
   # explicitly by piping bundle thru `exorcist`
-  mapFileName = step.fullInputPath+'.map'
-  exorcisedBundle = bundle.pipe exorcist mapFileName, step.pathForSourceMap
+  switch browserifyOptions?.mode
+    when 'redo', 'cache'
+      mapFileName = step.fullInputPath + '.map'
+      pathForSourceMap = step.pathForSourceMap
+    else
+      mapFileName = step.fullInputPath[...-2] + 'gen.js.map'
+      pathForSourceMap = step.pathForSourceMap[...-2] + 'gen.js'
+  console.log "\n  [#{mapFileName}]\n  [#{pathForSourceMap}]"
+  exorcisedBundle = bundle.pipe exorcist mapFileName, pathForSourceMap
   exorcisedBundle.originalBundle = bundle
 
   try # try-catch for browserify errors
 
     # get browserify result from either the cache or processing
-    string = getResult step, exorcisedBundle, browserifyOptions?.cache
+    string = getResult step, exorcisedBundle, browserifyOptions
 
-    # read the generated source map from the file
-    sourceMap = fs.readFileSync mapFileName, encoding:'utf8'
-    # delete source map file only when caching is off
-    # otherwise leave it "cached"
-    if browserifyOptions?.cache is false then fs.unlinkSync mapFileName
+    # for 'gen' mode the string returned is 'null', so we don't do anything.
+    if string isnt null
+      console.log '\n  string isnt null...\n'
+      # read the generated source map from the file
+      sourceMap = fs.readFileSync mapFileName, encoding:'utf8'
+      # delete source map file only when caching is off
+      # otherwise leave it "cached"
+      #if browserifyOptions?.cache is false then fs.unlinkSync mapFileName
 
-    # now that we have the compiled result as a string we can add it using CompileStep
-    # inside try-catch because this shouldn't run when there's an error.
-    step.addJavaScript
-      path:       step.inputPath  # name of the file
-      sourcePath: step.inputPath  # use same name, we've just browserified it
-      data:       string          # the actual browserified results
-      sourceMap:  sourceMap
-      bare:       step?.fileOptions?.bare
+      # now that we have the compiled result as a string we can add it using CompileStep
+      # inside try-catch because this shouldn't run when there's an error.
+      step.addJavaScript
+        path:       step.inputPath  # name of the file
+        sourcePath: step.inputPath  # use same name, we've just browserified it
+        data:       string          # the actual browserified results
+        sourceMap:  sourceMap
+        bare:       step?.fileOptions?.bare
 
+    # no matter what, delete map file unless we're doing caching
+    #if browserifyOptions?.mode is 'redo' then fs.unlinkSync mapFileName
+    ended = Date.now()
+    console.log "\n  procesFile completed [#{browserifyOptions?.mode}] #{((ended - started) / 1000)}s"
   catch e
     # output error via CompileStep#error()
     # convert it to a string and then remove the 'Error: ' at the beginning.
@@ -81,7 +101,7 @@ Plugin.registerSourceHandler 'browserify.js', processFile
 # add a source handler for config files so that they are watched for changes
 Plugin.registerSourceHandler 'browserify.options.json', ->
 
-checkFileChanges = (step, cacheFileName) ->
+checkFileChanges = (step, externalFileName) ->
   # we must rebuild when:
   #  1. we don't have cached results
   #  2. files have changed which may alter the build:
@@ -95,13 +115,13 @@ checkFileChanges = (step, cacheFileName) ->
   #  2. have the cached source map file
 
   # if we don't have cached results then we rebuild (return true)
-  unless fs.existsSync(cacheFileName) and
-    fs.existsSync(step.fullInputPath + '.map')
+  unless fs.existsSync(externalFileName) #and
+    #fs.existsSync(step.fullInputPath + '.map')
       return true
 
   # get the modified time of the cache file as an integer
   # NOTE: could use created time...
-  cachedTime = fs.statSync(cacheFileName).mtime.getTime()
+  cachedTime = fs.statSync(externalFileName).mtime.getTime()
 
   # if any of the files has changed then we rebuild (return true)
   for file in getFilesToCheck(step)
@@ -180,6 +200,12 @@ getBrowserifyOptions = (step) ->
     # provide to CompileStep
     debug: true
 
+    # use 'gen' processing mode by default
+    #   gen: generate a new JS file containing the result for Meteor to watch.
+    # cache: cache the result for reuse by this plugin
+    #  redo: no-cache and no-gen, instead, reproduce result each time
+    mode: 'gen'
+
     # put the defaults for envify transform in here as well
     # TODO: have an option which disables using envify
     transforms:
@@ -228,37 +254,39 @@ getReadable = (step) ->
 
   return readable
 
+writeAndReturnResult = (bundle, externalFileName) ->
+  # pipe result into external file while we're gathering it into a string
+  externalFileStream = fs.createWriteStream externalFileName,
+    flags:'w'
+    encoding:'utf8'
+  bundle.pipe externalFileStream
+
+  # call our wrapped function with the readable stream as its argument
+  return getString bundle
+
 # get compile result via cache or compiling
 # step : CompileStep
 # bundle: the Browserify made readable stream
-# useCache: true by default, specifies whether caching will be used
-getResult = (step, bundle, useCache = true) ->
+# options: processing options
+getResult = (step, bundle, options) ->
 
-  # TODO: getString line is in there twice. revise to eliminate duplication?
+  switch options.mode
 
-  # if caching isn't turned off in options
-  if useCache
-    cacheFileName = step.fullInputPath + '.cached'
-    # checks if files have changed or we don't have cached values
-    compileChanges = checkFileChanges step, cacheFileName
+    # if we're rebuilding the file each time, just get the string
+    when 'redo' then string = getString bundle
 
-    if compileChanges
-      # instead of writing the string result to the file after we have gathered
-      # it all, let's pipe the result into the cache file while we're gathering
-      # all the data for our string result
-      cacheFileStream = fs.createWriteStream cacheFileName,
-        flags:'w'
-        encoding:'utf8'
-      bundle.pipe cacheFileStream
+    when 'cache'
+      externalFileName = step.fullInputPath + '.cached'
+      if checkFileChanges step, externalFileName
+        string = writeAndReturnResult bundle, externalFileName
+      else # read the cached file instead
+        string = fs.readFileSync externalFileName, encoding:'utf8'
 
-      # call our wrapped function with the readable stream as its argument
-      string = getString bundle
-
-    else # read the cached file instead
-      string = fs.readFileSync cacheFileName, encoding:'utf8'
-
-  else # call our wrapped function with the readable stream as its argument
-    string = getString bundle
+    else # do 'gen' mode by default
+      externalFileName = step.fullInputPath[...-2] + 'gen.js'
+      if checkFileChanges step, externalFileName
+        writeAndReturnResult bundle, externalFileName
+      string = null
 
   return string
 
@@ -279,5 +307,5 @@ getString = Meteor.wrapAsync (bundle, cb) ->
   # NOTE:
   #  after piping bundle into exorcist transform the once('error') doesn't
   #  work. fixed it by storing original bundle as a property and registering
-  #  the event callback on that instead.  
+  #  the event callback on that instead.
   bundle.originalBundle.once 'error', (error) -> cb error
