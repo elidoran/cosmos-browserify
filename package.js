@@ -1,6 +1,6 @@
 Package.describe({
   name: 'cosmos:browserify',
-  version: '0.5.0',
+  version: '0.7.0',
   summary: 'Bundle NPM modules for client side with Browserify',
   git: 'https://github.com/elidoran/cosmos-browserify.git',
   documentation: 'README.md'
@@ -9,24 +9,45 @@ Package.describe({
 Package.registerBuildPlugin({
   name: "CosmosBrowserify",
   // need 'meteor' for Npm and Meteor.wrapAsync
-  use: ['coffeescript@1.0.6', 'meteor', 'underscore@1.0.3'],
+  use: ['caching-compiler', 'coffeescript', 'meteor', 'underscore'],
   sources: ['plugin/browserify.coffee'],
   npmDependencies: {"browserify": "10.2.6", "envify":"3.4.0", "exorcist":"0.4.0"}
 });
 
+// Need these so they're available during testing :(
+// the list of them in Package.registerBuildPlugin doesn't do it...
+// because plugin goes to .npm/plugin/CosmosBrowserify and these to: .npm/package
+// I'm using a symlink so there's only one copy of them.
+Npm.depends({"browserify": "10.2.6", "envify":"3.4.0", "exorcist":"0.4.0"});
+
+// Need this for the 'isobuild:compiler-plugin'
+Package.onUse(function (api) {
+  // no longer backwards compatible (just has to be)
+  api.versionsFrom('1.2-rc.12');
+  api.use([
+    'isobuild:compiler-plugin@1.0.0'
+  ], 'server');
+
+});
+
 Package.onTest(function(api) {
 
-  // not testing by adding package in 'use'.
-  // using mocks to test only this package's functionality
-  api.use(['tinytest', 'coffeescript@1.0.6', 'underscore']);
+  api.use([
+    'tinytest',
+    'coffeescript',
+    'underscore' ,
+    'cosmos:browserify'
+  ], 'server');
 
   api.addFiles([
-    // fill in the exported mocks (separate so I can write in CoffeeScript)
+    // mock things we aren't able to get in our test environment.
     'test/mocks.coffee',
+
+    // add our plugin, again, so we can get at the class
+    'plugin/browserify.coffee',
+
     // the tests
-    'test/browserify-tests.coffee',
-    // add our plugin file directly instead of adding package in api.use
-    'plugin/browserify.coffee'
-  ], 'client');
+    'test/browserify-tests.coffee'
+  ], 'server');
 
 });

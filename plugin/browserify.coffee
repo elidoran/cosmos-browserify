@@ -1,283 +1,249 @@
-Browserify = Npm.require 'browserify'
+# wasn't able to override Npm in testing like I used to. This solves that.
+npm = share.Npm ? Npm
+
+Browserify = npm.require 'browserify'
 
 # use custom envify so we can specify the env based on the meteor command used
-envify = Npm.require 'envify/custom'
+envify = npm.require 'envify/custom'
 
 # use exorcist transform to extract source map data
-exorcist = Npm.require 'exorcist'
+exorcist = npm.require 'exorcist'
 
 # get 'stream' to use PassThrough to provide a Buffer as a Readable stream
-stream = Npm.require 'stream'
+stream = npm.require 'stream'
 
-fs = Npm.require 'fs'
+# use OS agnostic and fiber friendly versions of fs and path
+fs = Plugin.fs
+path = Plugin.path
 
-processFile = (step) ->
+# extend standard compiler class to make implementation easier.
+# it will make us process the *.browserify.js files, and, provide them
+# *.browserify.options.json files as InputPath instances to get the content.
+# and it does the caching :)
+class BrowserifyPlugin extends MultiFileCachingCompiler
 
-  # check for extension as filename
-  checkFilename step
+  constructor: () ->
+    super
+      compilerName: 'CosmosBrowserify'
+      defaultCacheSize: 1024*1024*10 # TODO: what size??
 
-  # get options for Browserify
-  browserifyOptions = getBrowserifyOptions step
+  # this is how it knows which files we want to process, and which are referenced
+  isRoot: (file) -> file.getExtension() is 'browserify.js'
 
-  # create a browserify instance passing our readable stream as input,
-  # and options object for debug and the basedir
-  browserify = Browserify [getReadable(step)], browserifyOptions
+  getCacheKey: (file) ->
+    return [
+      file.getSourceHash()
+      file.getDeclaredExports()
+      file.getFileOptions()
+      # TODO: modified time of npm-shrinkwrap.json file OR hash of contents
+    ]
 
-  # extract envify tranform's options so it isn't used in loop
-  envifyOptions = browserifyOptions.transforms.envify
-  delete browserifyOptions.transforms.envify
+  compileResultSize: (compileResult) ->
+    compileResult.source.length + compileResult.sourceMap.length
 
-  # run each transform
-  for own transformName, transformOptions of browserifyOptions.transforms
-    browserify.transform transformName, transformOptions
+  addCompileResult: (file, compileResult) ->
+    file.addJavaScript
+      path: file.getPathInPackage(),
+      sourcePath: file.getPathInPackage(),
+      data: compileResult.source,
+      sourceMap: compileResult.sourceMap
 
-  # run the envify transform
-  browserify.transform envify envifyOptions
+  getOptionInfo: (file, files) ->
+    # generate path to options file from `file`, then get options InputFile
+    packageName = file.getPackageName()
+    # app file has no package, it's null, so, use empty string
+    packageName ?= ''
+    # replace 'js' with 'options.json'
+    tail = file.getPathInPackage()[...-2] + 'options.json'
+    # combine to form the weird path to the options file
+    optionFileKey = "{#{packageName}}/#{tail}"
+    # use it to get the InputFile representing the options file
+    optionInputFile = files.get optionFileKey
 
-  # have browserify process the file and include all required modules.
-  # we receive a readable stream as the result
-  bundle = browserify.bundle()
+    # return the results combined
+    return option =
+      input:optionInputFile
+      ref: if optionInputFile? then [optionFileKey] else []
+      package: file.getFileOptions()
 
-  # set the readable stream's encoding so we read strings from it
-  bundle.setEncoding('utf8')
+  #  1. returns '' for an app file, unless altPackageName exists
+  #  2. returns 'packages/packageFolderName' for package files
+  #  3. when altPackageName exists and it's an app file, it becomes the packageFolderName
+  getRoot: (altPackageName) ->
+    root = @getPackageName()
+    if root?
+      index = root.indexOf(':') + 1
+      root = 'packages/' + root[index...]
+    else if altPackageName?
+      root = 'packages/' + altPackageName
+    else
+      root = ''
 
-  # extract the source map content from the generated file to give to Meteor
-  # explicitly by piping bundle thru `exorcist`
-  mapFileName = step.fullInputPath+'.map'
-  exorcisedBundle = bundle.pipe exorcist mapFileName, step.pathForSourceMap
-  exorcisedBundle.originalBundle = bundle
+    return root
 
-  try # try-catch for browserify errors
+  compileOneFile: (file, files) ->
+    # bind a helper function to the file
+    file.getRoot = @getRoot.bind file
 
-    # get browserify result from either the cache or processing
-    string = getResult step, exorcisedBundle, browserifyOptions?.cache
+    # get the option InputFile, its import path in an array, and file.getFileOptions()
+    option = @getOptionInfo file, files
+
+    try # try-catch for browserify errors
+
+      # get options for Browserify
+      browserifyOptions = @getBrowserifyOptions file, option
+
+      # create a browserify instance passing our readable stream as input,
+      # and options object for debug and the basedir
+      browserify = Browserify [@getReadable(file)], browserifyOptions
+
+      # apply browserify tranforms specified in options file, and envify
+      @applyTransforms browserify, browserifyOptions
+
+      # process bundle with exorcist to get source map
+      bundle = @getBundle browserify, file
+
+      # get source string and sourceMap string from bundle
+      compileResult = @getCompileResult bundle
+
+      # return results in object which can be cached/stored/ref'd
+      return compileResult:compileResult, referencedImportPaths:option.ref
+
+    catch e
+      file.error message:e.message
+
+    return
+
+  applyTransforms: (browserify, browserifyOptions) ->
+    # extract envify tranform's options so it isn't used in loop
+    envifyOptions = browserifyOptions.transforms.envify
+    delete browserifyOptions.transforms.envify
+
+    # run each transform
+    for own transformName, transformOptions of browserifyOptions.transforms
+      browserify.transform transformName, transformOptions
+
+    # run the envify transform
+    browserify.transform envify envifyOptions
+
+    return
+
+  getBundle: (browserify, file) ->
+    # have browserify process the file and include all required modules.
+    # we receive a readable stream as the result
+    bundle = browserify.bundle()
+
+    # set the readable stream's encoding so we read strings from it
+    bundle.setEncoding('utf8')
+
+    # extract the source map content from the generated file to give to Meteor
+    # explicitly by piping bundle thru `exorcist`
+    mapFilePath = Plugin.convertToOSPath path.resolve file.getRoot(), file.getPathInPackage() + '.map'
+    exorcisedBundle = bundle.pipe exorcist mapFilePath, file.getDisplayPath()
+    exorcisedBundle.originalBundle = bundle
+    exorcisedBundle.mapFilePath = mapFilePath
+
+    return exorcisedBundle
+
+  getCompileResult: (bundle) ->
+    result = source: @getString bundle
 
     # read the generated source map from the file
-    sourceMap = fs.readFileSync mapFileName, encoding:'utf8'
-    # delete source map file only when caching is off
-    # otherwise leave it "cached"
-    if browserifyOptions?.cache is false then fs.unlinkSync mapFileName
+    sourceMap = fs.readFileSync bundle.mapFilePath, encoding:'utf8'
+    # delete source map file
+    fs.unlinkSync bundle.mapFilePath
+    # add source map to result
+    result.sourceMap = sourceMap
 
-    # now that we have the compiled result as a string we can add it using CompileStep
-    # inside try-catch because this shouldn't run when there's an error.
-    step.addJavaScript
-      path:       step.inputPath  # name of the file
-      sourcePath: step.inputPath  # use same name, we've just browserified it
-      data:       string          # the actual browserified results
-      sourceMap:  sourceMap
-      bare:       step?.fileOptions?.bare
+    return result
 
-  catch e
-    # output error via CompileStep#error()
-    # convert it to a string and then remove the 'Error: ' at the beginning.
-    step.error
-      message:e.toString().substring 7
-      sourcePath: step.inputPath
+  getBasedir: (file) ->
+    # get root folder for file, use npm-container when an app file.
+    folderPath = file.getRoot('npm-container')
+    # convert to a path on the system, resolve it against CWD, use real folder name
+    Plugin.convertToOSPath path.resolve folderPath, '.npm/package'
 
+  getBrowserifyOptions: (file, option) ->
 
-# add our function as the handler for files ending in 'browserify.js'
-Plugin.registerSourceHandler 'browserify.js', processFile
+    # empty user options to fill from file, if it exists
+    userOptions = {}
 
-# add a source handler for config files so that they are watched for changes
-Plugin.registerSourceHandler 'browserify.options.json', ->
+    if option?.input?
+      userOptions = JSON.parse option.input.getContentsAsString()
 
-checkFileChanges = (step, cacheFileName) ->
-  # we must rebuild when:
-  #  1. we don't have cached results
-  #  2. files have changed which may alter the build:
-  #    a. the browserify.js file
-  #    b. the browserify.options.json file
-  #    c. the npm-shrinkwrap.json file
-  #    d. the package.js file ?
+    # sane defaults for options; most important is the baseDir
+    defaultOptions =
+      # Browserify will look here for npm modules
+      basedir: @getBasedir file
 
-  # to use cached version we must:
-  #  1. have the cached file
-  #  2. have the cached source map file
+      # must be true to produce source map which we extract via exorcist and
+      # provide to CompileStep
+      debug: true
 
-  # if we don't have cached results then we rebuild (return true)
-  unless fs.existsSync(cacheFileName) and
-    fs.existsSync(step.fullInputPath + '.map')
-      return true
+      # put the defaults for envify transform in here as well
+      # TODO: have an option which disables using envify
+      transforms:
+        envify:
+          NODE_ENV: if @getDebug() then 'development' else 'production'
+          _:'purge'
 
-  # get the modified time of the cache file as an integer
-  # NOTE: could use created time...
-  cachedTime = fs.statSync(cacheFileName).mtime.getTime()
+    # merge user options with defaults (option.package is file.getFileOptions())
+    _.defaults userOptions, option.package, defaultOptions
 
-  # if any of the files has changed then we rebuild (return true)
-  for file in getFilesToCheck(step)
-    # if the file exists (options file may not exist)
-    if fs.existsSync(file)
-      # get the modified time as an integer
-      modifiedTime = fs.statSync(file).mtime.getTime()
-      # if it's a different time, then we rebuild (return true)
-      if cachedTime < modifiedTime
-        return true
+    # when they supply transforms it clobbers the envify defaults because
+    # _.defaults works only on top level keys.
+    # so, if there's no envify then set the default options for it
+    userOptions.transforms?.envify ?= defaultOptions.transforms.envify
 
-  # no changes so we can use the cached version (return false)
-  return false
+    return userOptions
 
-checkFilename = (step) ->
+  getDebug: ->
+    debug = true
 
-  if step.inputPath is 'browserify.js'
-    console.log 'WARNING: using \'browserify.js\' as full filename may stop working.' +
-      ' See Meteor Issue #3985. Please add something before it like: client.browserify.js'
+    # check args used
+    for key in process.argv
+      # if 'meteor bundle file' or 'meteor build path'
+      if key is 'bundle' or key is 'build'
+        debug = '--debug' in process.argv
+        break;
 
-getBasedir = (step) ->
+    return debug
 
-  # basedir should point to the '.npm/package' folder containing the npm modules.
-  # step.fullInputPath is the full path to our browserify.js file. it may be:
-  #   1. in a package
-  #   2. in the app itself
-  # for both of the above it also may be:
-  #   1. in the root (of package or app)
-  #   2. in a subfolder
-  # NOTE:
-  #   the app doesn't have npm support, so, no .npm/package.
-  #   using meteorhacks:npm creates a package to contain the npm modules.
-  #   so, if the browserify.js file is an app file, then let's look for
-  #   packages/npm-container/.npm/package
+  getReadable: (file) ->
 
-  # the basedir tail depends on whether this file is in the app or a package
-  # for an app file, we're going to assume they are using meteorhacks:npm
-  tail = if step?.packageName? then '.npm/package' else 'packages/npm-container/.npm/package'
+    # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
+    # stream to hold the Buffer
+    readable = new stream.PassThrough()
 
-  #   CompileStep has the absolute path to the file in `fullInputPath`
-  #   CompileStep has the package/app relative path to the file in `inputPath`
-  #   basedir is fullInputPath with inputPath replaced with the tail
-  basedir = step.fullInputPath[0...-(step.inputPath.length)] + tail
+    # Meteor's CompileStep provides the file as a Buffer from step.read()
+    # add the buffer into the stream and end the stream with one call to end()
+    readable.end file.getContentsAsBuffer()
 
-  # TODO: use fs.existsSync basedir
-  # could print a more helpful message to user than the browserify error saying
-  # it can't find the module at this directory. can suggest checking package.js
-  # for Npm.depends(), or, if an app file, adding meteorhacks:npm and checking
-  # packages.json.
+    return readable
 
-  return basedir
+  # async function for reading entire bundle output into a string
+  # wrap to convert to a synchronous function
+  getString: Meteor.wrapAsync (bundle, cb) ->
 
-getBrowserifyOptions = (step) ->
+    # holds all data read from bundle
+    string = ''
 
-  # empty user options to fill from file, if it exists
-  userOptions = {}
+    # concatenate data chunk to string
+    bundle.on 'data', (data) -> string += data
 
-  # look for a file with the same name, but .browserify.options.json extension
-  optionsFileName = step.fullInputPath[0...-2] + 'options.json'
+    # when we reach the end, call Meteor.wrapAsync's callback with string result
+    bundle.once 'end', -> cb undefined, string  # undefined = error
 
-  if fs.existsSync optionsFileName
-    try
-      # read json file and convert it into an object
-      userOptions = JSON.parse fs.readFileSync optionsFileName, 'utf8'
-    catch e
-      step.error
-        message: 'Couldn\'t read JSON data: '+e.toString()
-        sourcePath: step.inputPath
+    # when there's an error, give it to the callback
+    # NOTE:
+    #  after piping bundle into exorcist transform the once('error') doesn't
+    #  work. fixed it by storing original bundle as a property and registering
+    #  the event callback on that instead.
+    bundle.originalBundle.once 'error', (error) -> cb error
 
-  # sane defaults for options; most important is the baseDir
-  defaultOptions =
-    # Browserify will look here for npm modules
-    basedir: getBasedir(step)
+Plugin.registerCompiler
+  # have it watch the options files as well. we'll use their InputFile to read them, too
+  extensions:['browserify.js', 'browserify.options.json'], -> new BrowserifyPlugin()
 
-    # must be true to produce source map which we extract via exorcist and
-    # provide to CompileStep
-    debug: true
-
-    # put the defaults for envify transform in here as well
-    # TODO: have an option which disables using envify
-    transforms:
-      envify:
-        NODE_ENV: if getDebug() then 'development' else 'production'
-        _:'purge'
-
-  # merge user options with defaults
-  _.defaults userOptions, defaultOptions
-
-  # when they supply transforms it clobbers the envify defaults because
-  # _.defaults works only on top level keys.
-  # so, if there's no envify then set the default options for it
-  userOptions.transforms?.envify ?= defaultOptions.transforms.envify
-
-  return userOptions
-
-getDebug = ->
-  debug = true
-
-  # check args used
-  for key in process.argv
-    # if 'meteor bundle file' or 'meteor build path'
-    if key is 'bundle' or key is 'build'
-      debug = '--debug' in process.argv
-      break;
-
-  return debug
-
-# watch the browserify files and the npm file
-getFilesToCheck = (step) -> [
-    step.fullInputPath                           # browserify file
-    step.fullInputPath[...-3] + '.options.json'  # options file
-    getBasedir(step) + '/npm-shrinkwrap.json'    # npm modules used
-  ]
-
-getReadable = (step) ->
-
-  # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
-  # stream to hold the Buffer
-  readable = new stream.PassThrough()
-
-  # Meteor's CompileStep provides the file as a Buffer from step.read()
-  # add the buffer into the stream and end the stream with one call to end()
-  readable.end step.read()
-
-  return readable
-
-# get compile result via cache or compiling
-# step : CompileStep
-# bundle: the Browserify made readable stream
-# useCache: true by default, specifies whether caching will be used
-getResult = (step, bundle, useCache = true) ->
-
-  # TODO: getString line is in there twice. revise to eliminate duplication?
-
-  # if caching isn't turned off in options
-  if useCache
-    cacheFileName = step.fullInputPath + '.cached'
-    # checks if files have changed or we don't have cached values
-    compileChanges = checkFileChanges step, cacheFileName
-
-    if compileChanges
-      # instead of writing the string result to the file after we have gathered
-      # it all, let's pipe the result into the cache file while we're gathering
-      # all the data for our string result
-      cacheFileStream = fs.createWriteStream cacheFileName,
-        flags:'w'
-        encoding:'utf8'
-      bundle.pipe cacheFileStream
-
-      # call our wrapped function with the readable stream as its argument
-      string = getString bundle
-
-    else # read the cached file instead
-      string = fs.readFileSync cacheFileName, encoding:'utf8'
-
-  else # call our wrapped function with the readable stream as its argument
-    string = getString bundle
-
-  return string
-
-# async function for reading entire bundle output into a string
-# wrap to convert to a synchronous function
-getString = Meteor.wrapAsync (bundle, cb) ->
-
-  # holds all data read from bundle
-  string = ''
-
-  # concatenate data chunk to string
-  bundle.on 'data', (data) -> string += data
-
-  # when we reach the end, call Meteor.wrapAsync's callback with string result
-  bundle.once 'end', -> cb undefined, string  # undefined = error
-
-  # when there's an error, give it to the callback
-  # NOTE:
-  #  after piping bundle into exorcist transform the once('error') doesn't
-  #  work. fixed it by storing original bundle as a property and registering
-  #  the event callback on that instead.  
-  bundle.originalBundle.once 'error', (error) -> cb error
+# make available to tests
+share.BrowserifyPlugin = BrowserifyPlugin
