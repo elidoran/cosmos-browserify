@@ -17,7 +17,7 @@ fs = Plugin.fs
 path = Plugin.path
 
 # extend standard compiler class to make implementation easier.
-# it will make us process the *.browserify.js files, and, provide them
+# it will make us process the *.browserify.js files, and, provide the
 # *.browserify.options.json files as InputPath instances to get the content.
 # and it does the caching :)
 class BrowserifyPlugin extends MultiFileCachingCompiler
@@ -27,8 +27,10 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
       compilerName: 'CosmosBrowserify'
       defaultCacheSize: 1024*1024*10 # TODO: what size??
 
+
   # this is how it knows which files we want to process, and which are referenced
   isRoot: (file) -> file.getExtension() is 'browserify.js'
+
 
   getCacheKey: (file) ->
     return [
@@ -38,8 +40,10 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
       # TODO: modified time of npm-shrinkwrap.json file OR hash of contents
     ]
 
+
   compileResultSize: (compileResult) ->
     compileResult.source.length + compileResult.sourceMap.length
+
 
   addCompileResult: (file, compileResult) ->
     file.addJavaScript
@@ -48,15 +52,21 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
       data: compileResult.source,
       sourceMap: compileResult.sourceMap
 
+
   getOptionInfo: (file, files) ->
+
     # generate path to options file from `file`, then get options InputFile
     packageName = file.getPackageName()
+
     # app file has no package, it's null, so, use empty string
     packageName ?= ''
+
     # replace 'js' with 'options.json'
     tail = file.getPathInPackage()[...-2] + 'options.json'
+
     # combine to form the weird path to the options file
     optionFileKey = "{#{packageName}}/#{tail}"
+
     # use it to get the InputFile representing the options file
     optionInputFile = files.get optionFileKey
 
@@ -66,10 +76,12 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
       ref: if optionInputFile? then [optionFileKey] else []
       package: file.getFileOptions()
 
+
   #  1. returns '' for an app file, unless altPackageName exists
   #  2. returns 'packages/packageFolderName' for package files
-  #  3. when altPackageName exists and it's an app file, it becomes the packageFolderName
+  #  3. when altPackageName exists and it's an app file, it's used as the packageFolderName
   getRoot: (altPackageName) ->
+
     root = @getPackageName()
     if root?
       index = root.indexOf(':') + 1
@@ -80,6 +92,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
       root = ''
 
     return root
+
 
   compileOneFile: (file, files) ->
     # bind a helper function to the file
@@ -114,7 +127,9 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     return
 
+
   applyTransforms: (browserify, browserifyOptions) ->
+
     # extract envify tranform's options so it isn't used in loop
     envifyOptions = browserifyOptions.transforms.envify
     delete browserifyOptions.transforms.envify
@@ -123,12 +138,14 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     for own transformName, transformOptions of browserifyOptions.transforms
       browserify.transform transformName, transformOptions
 
-    # run the envify transform
+    # run the envify transform now (so it's last)
     browserify.transform envify envifyOptions
 
     return
 
+
   getBundle: (browserify, file) ->
+
     # have browserify process the file and include all required modules.
     # we receive a readable stream as the result
     bundle = browserify.bundle()
@@ -136,32 +153,46 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     # set the readable stream's encoding so we read strings from it
     bundle.setEncoding('utf8')
 
-    # extract the source map content from the generated file to give to Meteor
-    # explicitly by piping bundle thru `exorcist`
+    # # extract the source map content from the generated file to give to Meteor
+    # # explicitly by piping bundle thru `exorcist`
+    # get path to file in OS style, resolve against CWD with app/package root, and file path
     mapFilePath = Plugin.convertToOSPath path.resolve file.getRoot(), file.getPathInPackage() + '.map'
+
+    # pipe thru exorcist transform with display path as the 'source map url'
     exorcisedBundle = bundle.pipe exorcist mapFilePath, file.getDisplayPath()
+
+    # store reference to original bundle to access it elsewhere
     exorcisedBundle.originalBundle = bundle
+
+    # store path to map file so we can delete it later
     exorcisedBundle.mapFilePath = mapFilePath
 
     return exorcisedBundle
 
+
   getCompileResult: (bundle) ->
+
     result = source: @getString bundle
 
     # read the generated source map from the file
     sourceMap = fs.readFileSync bundle.mapFilePath, encoding:'utf8'
+
     # delete source map file
     fs.unlinkSync bundle.mapFilePath
+
     # add source map to result
     result.sourceMap = sourceMap
 
     return result
 
+
   getBasedir: (file) ->
-    # get root folder for file, use npm-container when an app file.
+
+    # get app/package root folder for file, use npm-container when an app file.
     folderPath = file.getRoot('npm-container')
-    # convert to a path on the system, resolve it against CWD, use real folder name
+    # convert to OS style, resolve it against CWD, use real folder name
     Plugin.convertToOSPath path.resolve folderPath, '.npm/package'
+
 
   getBrowserifyOptions: (file, option) ->
 
@@ -197,7 +228,9 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     return userOptions
 
+
   getDebug: ->
+
     debug = true
 
     # check args used
@@ -209,13 +242,14 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     return debug
 
+
   getReadable: (file) ->
 
     # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
     # stream to hold the Buffer
     readable = new stream.PassThrough()
 
-    # Meteor's CompileStep provides the file as a Buffer from step.read()
+    # Meteor's InputFile provides content as a Buffer or String
     # add the buffer into the stream and end the stream with one call to end()
     readable.end file.getContentsAsBuffer()
 
