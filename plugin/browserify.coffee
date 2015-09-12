@@ -251,7 +251,10 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     # Meteor's InputFile provides content as a Buffer or String
     # add the buffer into the stream and end the stream with one call to end()
-    readable.end file.getContentsAsBuffer()
+    buffer = file.getContentsAsBuffer()
+    # Browserify throws an error when we provide an empty readable stream
+    # so, ensure there is some content in there
+    readable.end if buffer?.length > 0 then buffer else '\n'
 
     return readable
 
