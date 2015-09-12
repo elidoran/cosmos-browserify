@@ -224,8 +224,10 @@ getReadable = (step) ->
 
   # Meteor's CompileStep provides the file as a Buffer from step.read()
   # add the buffer into the stream and end the stream with one call to end()
-  readable.end step.read()
-
+  buffer = step.read()
+  # Browserify throws an error when we provide an empty readable stream
+  # so, ensure there is some content in there
+  readable.end if buffer?.length > 0 then buffer else '\n'
   return readable
 
 # get compile result via cache or compiling
