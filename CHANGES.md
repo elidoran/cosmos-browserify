@@ -1,3 +1,7 @@
+# 0.5.1 - 2015/09/12
+
+1. avoid browserify crashing from an empty readable stream by adding a newline when CompileStep.read() returns an empty Buffer.  
+
 # 0.5.0 - 2015/07/17
 
 1. update browserify to 10.2.4 from 9.0.8. Test pass, apps work. Seems fine.
