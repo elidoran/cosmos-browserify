@@ -41,7 +41,6 @@ Use standard Meteor package create and add:
 
 ```
 $ meteor create --package cosmos:browserify-example
-$ meteor add cosmos:browserify-example
 ```
 
 #### 2. Create browserify file
@@ -65,7 +64,7 @@ Npm.depends({
 
 Package.onUse(function(api) {
   // add package
-  api.use(['cosmos:browserify@0.2.0'], 'client');
+  api.use(['cosmos:browserify@0.5.1'], 'client');
 
   // add browserify file in step #2 with your package's client files
   api.addFiles(['client.browserify.js', 'your/package/file.js'], 'client');
