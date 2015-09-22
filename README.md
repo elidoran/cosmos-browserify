@@ -2,6 +2,8 @@
 
 #### [Browserify](http://browserify.org) [npm](http://npmjs.org) dependencies in [Meteor](http://meteor.com) packages for **client side** use.
 
+##### Note: For Meteor 1.2 you must use comsos:browserify 0.7.0+
+
 ## Table of Contents
 
 1. [Example Meteor App](#example-meteor-app)
@@ -64,7 +66,7 @@ Npm.depends({
 
 Package.onUse(function(api) {
   // add package
-  api.use(['cosmos:browserify@0.5.1'], 'client');
+  api.use(['cosmos:browserify@0.7.0'], 'client');
 
   // add browserify file in step #2 with your package's client files
   api.addFiles(['client.browserify.js', 'your/package/file.js'], 'client');
@@ -243,19 +245,8 @@ api.addFiles([
 
 ## Caching Result
 
-As of 0.5.0 the browserify result is cached and regenerated only when files affecting it have changed:
+As of 0.7.0 the Meteor Build API supports caching build plugin results. It will only redo a browserify operation when files it builds have changed.
 
-1. *.browserify.js
-2. *.browserify.options.json
-3. .npm/package/npm-shrinkwrap.json - means the npm modules may have changed
-
-You may disable caching using the options file and the `cache` option:
-
-```
-{
-  "cache" : false
-}
-```
 
 ## Reporting an Issue
 

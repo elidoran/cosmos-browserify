@@ -1,3 +1,10 @@
+
+# 0.7.0 - 2015/09/22
+
+1. rewrote plugin to work with Meteor 1.2 Build API
+2. updated README with note about version use
+3. updated browserify to 11.1.0
+
 # 0.5.1 - 2015/09/12
 
 1. avoid browserify crashing from an empty readable stream by adding a newline when CompileStep.read() returns an empty Buffer.  

@@ -9,21 +9,21 @@ Package.describe({
 Package.registerBuildPlugin({
   name: "CosmosBrowserify",
   // need 'meteor' for Npm and Meteor.wrapAsync
-  use: ['caching-compiler', 'coffeescript', 'meteor', 'underscore'],
+  use: ['caching-compiler@1.0.0', 'coffeescript@1.0.9', 'meteor', 'underscore'],
   sources: ['plugin/browserify.coffee'],
-  npmDependencies: {"browserify": "10.2.6", "envify":"3.4.0", "exorcist":"0.4.0"}
+  npmDependencies: {"browserify": "11.1.0", "envify":"3.4.0", "exorcist":"0.4.0"}
 });
 
 // Need these so they're available during testing :(
 // the list of them in Package.registerBuildPlugin doesn't do it...
 // because plugin goes to .npm/plugin/CosmosBrowserify and these to: .npm/package
 // I'm using a symlink so there's only one copy of them.
-Npm.depends({"browserify": "10.2.6", "envify":"3.4.0", "exorcist":"0.4.0"});
+Npm.depends({"browserify": "11.1.0", "envify":"3.4.0", "exorcist":"0.4.0"});
 
 // Need this for the 'isobuild:compiler-plugin'
 Package.onUse(function (api) {
   // no longer backwards compatible (just has to be)
-  api.versionsFrom('1.2-rc.12');
+  api.versionsFrom('1.2');
   api.use([
     'isobuild:compiler-plugin@1.0.0'
   ], 'server');
