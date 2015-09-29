@@ -1,4 +1,8 @@
 
+# 0.7.1 - 2015/09/29
+
+1. added ability for package directory to be any format by digging it out of InputFile's properties
+
 # 0.7.0 - 2015/09/22
 
 1. rewrote plugin to work with Meteor 1.2 Build API
