@@ -82,12 +82,32 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
   #  3. when altPackageName exists and it's an app file, it's used as the packageFolderName
   getRoot: (altPackageName) ->
 
+    # use the cached value when it exists
+    if this.___root? then return this.___root
+
+    # we can tell if we're processing an app file or a package file based on this value
+    # null means app file
     root = @getPackageName()
+
     if root?
-      index = root.indexOf(':') + 1
-      root = 'packages/' + root[index...]
+      # if there is a deeply hidden property containing keys with the actual directory name...
+      if this?._resourceSlot?.packageSourceBatch?.unibuild?.watchSet?.files?
+        # get one of the keys
+        break for watchedFile of this._resourceSlot.packageSourceBatch.unibuild.watchSet.files
+        # get path relative to the app's directory
+        relativePath = path.relative (path.resolve '.'), watchedFile
+        # strip off tail, only keep the 'packages/packageDirectory' portion
+        root = relativePath[...relativePath.indexOf('/', 10)]
+        # cache this value so we don't have to calculate it again
+        this.___root = root
+      else
+        # use the 'meteor way' of having a package's directory be its name without the username
+        index = root.indexOf(':') + 1
+        root = 'packages/' + root[index...]
+
     else if altPackageName?
       root = 'packages/' + altPackageName
+
     else
       root = ''
 
