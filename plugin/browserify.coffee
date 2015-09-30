@@ -82,14 +82,24 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
   #  3. when altPackageName exists and it's an app file, it's used as the packageFolderName
   getRoot: (altPackageName) ->
 
-    # use the cached value when it exists
+    # finding the root is even more complicated in the new Build API, yay.
+    # 1. `meteor test-packages ./` gives a package name but root is ''
+    # 2. `meteor run` gives:
+    #       a package name for a package file and root is packages/[username:]packageName
+    #       null for package name for an app file and root is ''
+
+    # first, if we're testing a package, then the root is ''
+    if 'test-packages' in process.argv then return ''
+
+    # second, if there is a cached value then use it
     if this.___root? then return this.___root
 
-    # we can tell if we're processing an app file or a package file based on this value
+    # third, use the package name to determine if we're processing an app or package file
     # null means app file
     root = @getPackageName()
 
     if root?
+      # fourth, allow package directory name to optionally have `username:`
       # if there is a deeply hidden property containing keys with the actual directory name...
       if this?._resourceSlot?.packageSourceBatch?.unibuild?.watchSet?.files?
         # get one of the keys
@@ -100,14 +110,17 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
         root = relativePath[...relativePath.indexOf('/', 10)]
         # cache this value so we don't have to calculate it again
         this.___root = root
+      # fifth, use the 'meteor way' of having a package's directory be its name
+      # without the username
       else
-        # use the 'meteor way' of having a package's directory be its name without the username
         index = root.indexOf(':') + 1
         root = 'packages/' + root[index...]
 
+    # sixth, use an alternate package name (for npm-container...)
     else if altPackageName?
       root = 'packages/' + altPackageName
 
+    # seventh, it's an app file, so root is ''
     else
       root = ''
 
@@ -296,7 +309,8 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     #  after piping bundle into exorcist transform the once('error') doesn't
     #  work. fixed it by storing original bundle as a property and registering
     #  the event callback on that instead.
-    bundle.originalBundle.once 'error', (error) -> cb error
+    bundle.originalBundle.once 'error', cb
+    bundle.once 'error', cb
 
 Plugin.registerCompiler
   # have it watch the options files as well. we'll use their InputFile to read them, too
