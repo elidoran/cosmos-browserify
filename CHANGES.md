@@ -1,4 +1,8 @@
 
+# 0.7.2 - 2015/09/30
+
+1. fixed getRoot() for test-packages
+
 # 0.7.1 - 2015/09/29
 
 1. added ability for package directory to be any format by digging it out of InputFile's properties
