@@ -131,10 +131,13 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
             # get the next directory up the path
             dir = path.dirname dir
             # try both:
-            # unpublished: .npm/package
-            # published  : npm
+            #   unpublished: .npm/package
+            #   published  : npm
             for npm in [ '.npm/package', 'npm' ]
-              if fs.existsSync path.join dir, npm then root = dir ; break
+              if fs.existsSync path.join dir, npm  # look in dir for npm stuff
+                root = dir                         # we found the root
+                @___whichNpm = npm                 # store which npm path we used
+                break                              # don't do another check
           # root wasn't found then ...
           root ?= ''
         # cache this value so we don't have to calculate it again
@@ -253,7 +256,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     # get app/package root folder for file, use npm-container when an app file.
     folderPath = file.getRoot('npm-container')
     # convert to OS style, resolve it against CWD, use real folder name
-    Plugin.convertToOSPath path.resolve folderPath, '.npm/package'
+    Plugin.convertToOSPath path.resolve folderPath, (file.___whichNpm ? '.npm/package')
 
 
   getBrowserifyOptions: (file, option) ->
