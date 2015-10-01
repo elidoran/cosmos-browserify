@@ -1,6 +1,6 @@
 Package.describe({
   name: 'cosmos:browserify',
-  version: '0.7.3',
+  version: '0.7.4',
   summary: 'Bundle NPM modules for client side with Browserify',
   git: 'https://github.com/elidoran/cosmos-browserify.git',
   documentation: 'README.md'
@@ -9,7 +9,7 @@ Package.describe({
 Package.registerBuildPlugin({
   name: "CosmosBrowserify",
   // need 'meteor' for Npm and Meteor.wrapAsync
-  use: ['caching-compiler@1.0.0', 'coffeescript@1.0.9', 'meteor', 'underscore@1.0.4'],
+  use: ['caching-compiler@1.0.0', 'coffeescript@1.0.10', 'meteor', 'underscore@1.0.4'],
   sources: ['plugin/browserify.coffee'],
   npmDependencies: {"browserify": "11.1.0", "envify":"3.4.0", "exorcist":"0.4.0"}
 });
