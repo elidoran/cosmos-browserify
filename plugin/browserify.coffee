@@ -7,7 +7,10 @@ Browserify = npm.require 'browserify'
 envify = npm.require 'envify/custom'
 
 # use exorcist transform to extract source map data
-exorcist = npm.require 'exorcist'
+exorcistStream = npm.require 'exorcist-stream'
+
+# use to hold file content as readable and get source map as writable
+strung = npm.require 'strung'
 
 # get 'stream' to use PassThrough to provide a Buffer as a Readable stream
 stream = npm.require 'stream'
@@ -15,6 +18,47 @@ stream = npm.require 'stream'
 # use OS agnostic and fiber friendly versions of fs and path
 fs = Plugin.fs
 path = Plugin.path
+
+# # # NOTES FOR getNpmDir()
+#
+# finding the root is even more complicated in the new Build API, yay.
+# let's try yet another tactic to overcome the API's missing directory information
+# where are the npm modules?
+# A. app file in a running app
+#   1. packages/npm-container/.npm/package/node_modules
+#   2. node_modules (if someone installs them in the app manually)
+# B. package file in a running app
+#   1. packages/packageName/.npm/package/node_modules
+#   2. packages/username:packageName/.npm/package/node_modules
+#   3. ~/.meteor/packages/username_packageName/version/npm/node_modules
+# C. package file in a package being tested via `meteor test-packages`
+#   1. .npm/package/node_modules - when called like `meteor test-packages ./`
+#   2. otherwise the root is where the referenced packages are, which can be anything
+
+# helps getNpmDir by searching even deeper into the InputFile's properties
+getNpmDirForPackage = (isopackCache, name) ->
+  pkg = isopackCache._packageMap._map[name]
+  if pkg.kind is 'local' then pkg.packageSource.npmCacheDirectory
+
+  else # it's a versioned package... doesn't have a packageSource object.
+    builds = isopackCache._isopacks[name].unibuilds
+    for build in builds when build.arch is 'os' # the 'os' one has nodeModulesPath
+      return build.nodeModulesPath[...-12]
+
+getNpmDir = (file) ->
+  packageName = file.getPackageName()
+  # way deep down there is some useful properties to locate the npm directory
+  isopackCache = file._resourceSlot.packageSourceBatch.processor.isopackCache
+
+  # package file, get npm dir from the package's properties
+  if packageName? then getNpmDirForPackage isopackCache, packageName
+
+  # app file, try meteorhacks:npm's npm-container package...
+  else if isopackCache._packageMap._map?['npm-container']?
+    getNpmDirForPackage isopackCache, 'npm-container'
+
+  else '.' # else, they'd better have `node_modules` in the root of the app
+
 
 # extend standard compiler class to make implementation easier.
 # it will make us process the *.browserify.js files, and, provide the
@@ -77,91 +121,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
       package: file.getFileOptions()
 
 
-  #  1. returns '' for an app file, unless altPackageName exists
-  #  2. returns 'packages/packageFolderName' for package files
-  #  3. when altPackageName exists and it's an app file, it's used as the packageFolderName
-  getRoot: (altPackageName) ->
-
-    # finding the root is even more complicated in the new Build API, yay.
-    # let's try yet another tactic to overcome the API's missing directory information
-
-    # where are the npm modules?
-    # A. app file in a running app
-    #   1. packages/npm-container/.npm/package/node_modules
-    #   2. node_modules (if someone installs them in the app manually)
-    # B. package file in a running app
-    #   1. packages/packageName/.npm/package/node_modules
-    #   2. packages/username:packageName/.npm/package/node_modules
-    #   3. ~/.meteor/packages/username_packageName/version/npm/node_modules
-    # C. package file in a package being tested via `meteor test-packages`
-    #   1. .npm/package/node_modules - when called like `meteor test-packages ./`
-    #   2. otherwise the root is where the referenced packages are, which can be anything
-
-    # if there is a cached value then use it
-    if this.___root? then return this.___root
-
-    # use the package name to determine if we're processing an app or package file
-    # null means app file
-    packageName = @getPackageName()
-
-    if packageName?
-      # allow package directory name to optionally have `username:`
-      # if there is a deeply hidden property containing keys with the actual directory name...
-      if this?._resourceSlot?.packageSourceBatch?.unibuild?.watchSet?.files?
-
-        # get one of the keys
-        break for watchedFile of this._resourceSlot.packageSourceBatch.unibuild.watchSet.files
-
-        # get path relative to the current workind directory
-        relativePath = path.relative (path.resolve '.'), watchedFile
-
-        # the easy one, it's a file in a package in an app
-        if 'packages/' is relativePath[...9]
-          # strip off tail, only keep the 'packages/packageDirectory' portion
-          root = relativePath[...relativePath.indexOf('/', 10)]
-
-        # TODO: can't test this with `meteor test-packages` until it's published... great
-        # TODO: can't test this in ~/.meteor/packages until i publish a package using it... great
-        else # peel off path parts until we find either .npm or npm
-          # i dislike doing `fs` calls, but, it seems there is no other option
-          # it's a file at first...
-          dir = relativePath
-          # dirname '' = '.'
-          until root? or dir is '.'
-            # get the next directory up the path
-            dir = path.dirname dir
-            # try both:
-            #   unpublished: .npm/package
-            #   published  : npm
-            for npm in [ '.npm/package', 'npm' ]
-              if fs.existsSync path.join dir, npm  # look in dir for npm stuff
-                root = dir                         # we found the root
-                @___whichNpm = npm                 # store which npm path we used
-                break                              # don't do another check
-          # root wasn't found then ...
-          root ?= ''
-        # cache this value so we don't have to calculate it again
-        this.___root = root
-      # fifth, use the 'meteor way' of having a package's directory be its name
-      # without the username
-      else
-        index = packageName.indexOf(':') + 1
-        root = 'packages/' + packageName[index...]
-
-    # sixth, use an alternate package name (for npm-container...)
-    else if altPackageName?
-      root = 'packages/' + altPackageName
-
-    # seventh, it's an app file, so root is ''
-    else
-      root = ''
-
-    return root
-
-
   compileOneFile: (file, files) ->
-    # bind a helper function to the file
-    file.getRoot = @getRoot.bind file
 
     # get the option InputFile, its import path in an array, and file.getFileOptions()
     option = @getOptionInfo file, files
@@ -218,19 +178,18 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     # set the readable stream's encoding so we read strings from it
     bundle.setEncoding('utf8')
 
-    # # extract the source map content from the generated file to give to Meteor
-    # # explicitly by piping bundle thru `exorcist`
-    # get path to file in OS style, resolve against CWD with app/package root, and file path
-    mapFilePath = Plugin.convertToOSPath path.resolve file.getRoot(), file.getPathInPackage() + '.map'
+    # create a stream to gather the source map
+    sourceMapStream = strung()
 
-    # pipe thru exorcist transform with display path as the 'source map url'
-    exorcisedBundle = bundle.pipe exorcist mapFilePath, file.getDisplayPath()
+    # extract the source map content from the generated file to give to Meteor
+    # explicitly by piping bundle thru `exorcist-stream`
+    exorcisedBundle = bundle.pipe exorcistStream sourceMapStream, file.getDisplayPath()
 
     # store reference to original bundle to access it elsewhere
     exorcisedBundle.originalBundle = bundle
 
-    # store path to map file so we can delete it later
-    exorcisedBundle.mapFilePath = mapFilePath
+    # store stream which gathers the source map for later use
+    exorcisedBundle.sourceMapStream = sourceMapStream
 
     return exorcisedBundle
 
@@ -239,24 +198,10 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     result = source: @getString bundle
 
-    # read the generated source map from the file
-    sourceMap = fs.readFileSync bundle.mapFilePath, encoding:'utf8'
-
-    # delete source map file
-    fs.unlinkSync bundle.mapFilePath
-
     # add source map to result
-    result.sourceMap = sourceMap
+    result.sourceMap = bundle.sourceMapStream.string
 
     return result
-
-
-  getBasedir: (file) ->
-
-    # get app/package root folder for file, use npm-container when an app file.
-    folderPath = file.getRoot('npm-container')
-    # convert to OS style, resolve it against CWD, use real folder name
-    Plugin.convertToOSPath path.resolve folderPath, (file.___whichNpm ? '.npm/package')
 
 
   getBrowserifyOptions: (file, option) ->
@@ -270,7 +215,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     # sane defaults for options; most important is the baseDir
     defaultOptions =
       # Browserify will look here for npm modules
-      basedir: @getBasedir file
+      basedir: getNpmDir file
 
       # must be true to produce source map which we extract via exorcist and
       # provide to CompileStep
@@ -310,39 +255,35 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
   getReadable: (file) ->
 
-    # Browserify accepts a Readable stream as input, so, we'll use a PassThrough
-    # stream to hold the Buffer
-    readable = new stream.PassThrough()
+    # 1. Browserify accepts a Readable stream as input, so, we'll use a `strung`
+    # 2. Meteor's InputFile provides content as a Buffer or String, we'll get a string
+    # 3. Browserify errors when it gets an empty readable stream, so ensure content
 
-    # Meteor's InputFile provides content as a Buffer or String
-    # add the buffer into the stream and end the stream with one call to end()
-    buffer = file.getContentsAsBuffer()
-    # Browserify throws an error when we provide an empty readable stream
-    # so, ensure there is some content in there
-    readable.end if buffer?.length > 0 then buffer else '\n'
+    # get the string content
+    string = file.getContentsAsString()
 
-    return readable
+    # creat `strung` stream with string content
+    # , or, if it's empty, then a single newline character
+    strung if string?.length > 0 then string else '\n'
 
   # async function for reading entire bundle output into a string
   # wrap to convert to a synchronous function
   getString: Meteor.wrapAsync (bundle, cb) ->
 
-    # holds all data read from bundle
-    string = ''
+    # create a stream to collect the source
+    source = strung()
 
-    # concatenate data chunk to string
-    bundle.on 'data', (data) -> string += data
+    # when source is finished collecting, provide it to the callback
+    source.on 'finish', -> cb undefined, source.string
 
-    # when we reach the end, call Meteor.wrapAsync's callback with string result
-    bundle.once 'end', -> cb undefined, string  # undefined = error
-
-    # when there's an error, give it to the callback
-    # NOTE:
-    #  after piping bundle into exorcist transform the once('error') doesn't
-    #  work. fixed it by storing original bundle as a property and registering
-    #  the event callback on that instead.
+    # when there's an error on any of the streams give it to the callback
+    source.on 'error', cb
     bundle.originalBundle.once 'error', cb
+    bundle.sourceMapStream.once 'error', cb
     bundle.once 'error', cb
+
+    # pipe bundle (source result) into source stream
+    bundle.pipe source
 
 Plugin.registerCompiler
   # have it watch the options files as well. we'll use their InputFile to read them, too
