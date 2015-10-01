@@ -1,4 +1,19 @@
 
+# 0.8.0 - 2015/10/1
+
+1. totally new algorithm for locating npm dir. uses deep internal properties (no bueno, but necessary)
+2. uses `exorcist-stream` (forked `exorcist` with PR#26) to avoid writing source map to a file, reading the file, and then deleting the file
+3. uses `strung` instead of `streams.PassThrough` as readable
+4. uses `strung` instead of `on 'data'` to gather source from browserify
+
+# 0.7.4 - 2015/09/30
+
+1. tried another way to fix getRoot()
+
+# 0.7.3 - 2015/09/30
+
+1. tried another way to fix getRoot()
+
 # 0.7.2 - 2015/09/30
 
 1. fixed getRoot() for test-packages
