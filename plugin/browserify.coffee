@@ -12,9 +12,6 @@ exorcistStream = npm.require 'exorcist-stream'
 # use to hold file content as readable and get source map as writable
 strung = npm.require 'strung'
 
-# get 'stream' to use PassThrough to provide a Buffer as a Readable stream
-stream = npm.require 'stream'
-
 # use OS agnostic and fiber friendly versions of fs and path
 fs = Plugin.fs
 path = Plugin.path
