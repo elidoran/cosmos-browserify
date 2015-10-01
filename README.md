@@ -2,7 +2,7 @@
 
 #### [Browserify](http://browserify.org) [npm](http://npmjs.org) dependencies in [Meteor](http://meteor.com) packages for **client side** use.
 
-##### Note: For Meteor 1.2 you must use comsos:browserify 0.8.0+
+#### Note: For Meteor 1.2 you must use comsos:browserify 0.8.0+
 
 ## Table of Contents
 
