@@ -652,7 +652,7 @@
         }
       }
     },
-    "exorcist": {
+    "exorcist-stream": {
       "version": "0.4.0",
       "dependencies": {
         "minimist": {
@@ -670,9 +670,12 @@
           }
         },
         "nave": {
-          "version": "0.5.1"
+          "version": "0.5.2"
         }
       }
+    },
+    "strung": {
+      "version": "1.0.4"
     }
   }
 }
