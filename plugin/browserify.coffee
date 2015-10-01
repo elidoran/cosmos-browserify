@@ -83,38 +83,67 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
   getRoot: (altPackageName) ->
 
     # finding the root is even more complicated in the new Build API, yay.
-    # 1. `meteor test-packages ./` gives a package name but root is ''
-    # 2. `meteor run` gives:
-    #       a package name for a package file and root is packages/[username:]packageName
-    #       null for package name for an app file and root is ''
+    # let's try yet another tactic to overcome the API's missing directory information
 
-    # first, if we're testing a package, then the root is ''
-    if 'test-packages' in process.argv then return ''
+    # where are the npm modules?
+    # A. app file in a running app
+    #   1. packages/npm-container/.npm/package/node_modules
+    #   2. node_modules (if someone installs them in the app manually)
+    # B. package file in a running app
+    #   1. packages/packageName/.npm/package/node_modules
+    #   2. packages/username:packageName/.npm/package/node_modules
+    #   3. ~/.meteor/packages/username_packageName/version/npm/node_modules
+    # C. package file in a package being tested via `meteor test-packages`
+    #   1. .npm/package/node_modules - when called like `meteor test-packages ./`
+    #   2. otherwise the root is where the referenced packages are, which can be anything
 
-    # second, if there is a cached value then use it
+    # if there is a cached value then use it
     if this.___root? then return this.___root
 
-    # third, use the package name to determine if we're processing an app or package file
+    # use the package name to determine if we're processing an app or package file
     # null means app file
-    root = @getPackageName()
+    packageName = @getPackageName()
 
-    if root?
-      # fourth, allow package directory name to optionally have `username:`
+    if packageName?
+      # allow package directory name to optionally have `username:`
       # if there is a deeply hidden property containing keys with the actual directory name...
       if this?._resourceSlot?.packageSourceBatch?.unibuild?.watchSet?.files?
+
         # get one of the keys
         break for watchedFile of this._resourceSlot.packageSourceBatch.unibuild.watchSet.files
-        # get path relative to the app's directory
+
+        # get path relative to the current workind directory
         relativePath = path.relative (path.resolve '.'), watchedFile
-        # strip off tail, only keep the 'packages/packageDirectory' portion
-        root = relativePath[...relativePath.indexOf('/', 10)]
+
+        # the easy one, it's a file in a package in an app
+        if 'packages/' is relativePath[...9]
+          # strip off tail, only keep the 'packages/packageDirectory' portion
+          root = relativePath[...relativePath.indexOf('/', 10)]
+
+        # TODO: can't test this with `meteor test-packages` until it's published... great
+        # TODO: can't test this in ~/.meteor/packages until i publish a package using it... great
+        else # peel off path parts until we find either .npm or npm
+          # i dislike doing `fs` calls, but, it seems there is no other option
+          # it's a file at first...
+          dir = relativePath
+          # dirname '' = '.'
+          until root? or dir is '.'
+            # get the next directory up the path
+            dir = path.dirname dir
+            # try both:
+            # unpublished: .npm/package
+            # published  : npm
+            for npm in [ '.npm/package', 'npm' ]
+              if fs.existsSync path.join dir, npm then root = dir ; break
+          # root wasn't found then ...
+          root ?= ''
         # cache this value so we don't have to calculate it again
         this.___root = root
       # fifth, use the 'meteor way' of having a package's directory be its name
       # without the username
       else
-        index = root.indexOf(':') + 1
-        root = 'packages/' + root[index...]
+        index = packageName.indexOf(':') + 1
+        root = 'packages/' + packageName[index...]
 
     # sixth, use an alternate package name (for npm-container...)
     else if altPackageName?
