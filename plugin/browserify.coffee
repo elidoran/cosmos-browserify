@@ -212,7 +212,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     # sane defaults for options; most important is the baseDir
     defaultOptions =
       # Browserify will look here for npm modules
-      basedir: getNpmDir file
+      basedir: Plugin.convertToOSPath getNpmDir file
 
       # must be true to produce source map which we extract via exorcist and
       # provide to CompileStep
@@ -224,7 +224,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
         envify:
           NODE_ENV: if @getDebug() then 'development' else 'production'
           _:'purge'
-
+    
     # merge user options with defaults (option.package is file.getFileOptions())
     _.defaults userOptions, option.package, defaultOptions
 
