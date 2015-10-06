@@ -1,4 +1,8 @@
 
+# 0.8.1 - 2015/10/6
+
+1. fix #24 by converting npm dir path to OS style path
+
 # 0.8.0 - 2015/10/1
 
 1. totally new algorithm for locating npm dir. uses deep internal properties (no bueno, but necessary)
