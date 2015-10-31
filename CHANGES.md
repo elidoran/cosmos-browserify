@@ -1,3 +1,7 @@
+# 0.8.3 - 2015/10/30
+
+1. upgrade Browserify from 11.1.0 to 11.2.0
+
 # 0.8.2 - 2015/10/30
 
 1. removed `file.getDeclaredExports()` from `getCacheKey()` to fix #29
