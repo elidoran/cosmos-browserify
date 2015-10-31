@@ -1,3 +1,6 @@
+# 0.8.2 - 2015/10/30
+
+1. removed `file.getDeclaredExports()` from `getCacheKey()` to fix #29
 
 # 0.8.1 - 2015/10/6
 
