@@ -76,7 +76,6 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
   getCacheKey: (file) ->
     return [
       file.getSourceHash()
-      file.getDeclaredExports()
       file.getFileOptions()
       # TODO: modified time of npm-shrinkwrap.json file OR hash of contents
     ]
@@ -224,7 +223,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
         envify:
           NODE_ENV: if @getDebug() then 'development' else 'production'
           _:'purge'
-    
+
     # merge user options with defaults (option.package is file.getFileOptions())
     _.defaults userOptions, option.package, defaultOptions
 
