@@ -33,22 +33,37 @@ path = Plugin.path
 #   2. otherwise the root is where the referenced packages are, which can be anything
 
 # helps getNpmDir by searching even deeper into the InputFile's properties
-getNpmDirForPackage = (isopackCache, name) ->
+getNpmDirForPackage = (isopackCache, name, basedirOption) ->
   pkg = isopackCache._packageMap._map[name]
   if pkg.kind is 'local' then pkg.packageSource.npmCacheDirectory
 
   else # it's a versioned package... doesn't have a packageSource object.
     builds = isopackCache._isopacks[name].unibuilds
+
     for build in builds when build.arch is 'os' # the 'os' one has nodeModulesPath
+      # if user specified a basedir option
+      if basedirOption?
+        # we need the home directory to find ~/.meteor/packages
+        home = process.env.HOME ? process.env.USERPROFILE
+        meteorPackages = home + '/.meteor/packages/'
+        # package name uses a colon, file system uses an underscore
+        packageName = name.replace ':', '_'
+        # the build info has the package's version
+        version = '/' + build.pkg.version
+        # combine this all into a directory and convert it to OS specific path
+        dir = Plugin.convertToOSPath meteorPackages + packageName + version + '/web.browser/' + basedirOption
+        # lastly, return this directory only if it has `node_modules` in it
+        return dir if fs.existsSync path.join dir, 'node_modules'
+      # if we didn't return above, then, return this:
       return build.nodeModulesPath[...-12]
 
-getNpmDir = (file) ->
+getNpmDir = (file, basedirOption) ->
   packageName = file.getPackageName()
   # way deep down there is some useful properties to locate the npm directory
   isopackCache = file._resourceSlot.packageSourceBatch.processor.isopackCache
 
   # package file, get npm dir from the package's properties
-  if packageName? then getNpmDirForPackage isopackCache, packageName
+  if packageName? then getNpmDirForPackage isopackCache, packageName, basedirOption
 
   # app file, try meteorhacks:npm's npm-container package...
   else if isopackCache._packageMap._map?['npm-container']?
@@ -208,10 +223,12 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     if option?.input?
       userOptions = JSON.parse option.input.getContentsAsString()
 
-    # sane defaults for options; most important is the baseDir
+    # check for `basedir` from options file or package.js file options
+    basedirOption = userOptions.basedir ? option?.package?.basedir
+
+    # sane defaults for options
+    # NOTE: no longer putting basedir right here
     defaultOptions =
-      # Browserify will look here for npm modules
-      basedir: Plugin.convertToOSPath getNpmDir file
 
       # must be true to produce source map which we extract via exorcist and
       # provide to CompileStep
@@ -223,6 +240,15 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
         envify:
           NODE_ENV: if @getDebug() then 'development' else 'production'
           _:'purge'
+
+    # Browserify will look in `basedir` for npm modules
+    # 1. place the result into `userOptions` so it's last in the hierarchy
+    #    and isn't overridden
+    # 2. check for cached result to avoid the work in rebuilds
+    # 3. include `basedirOption` no matter what, it may be undefined
+    # 4. store the result on the `file` for #2
+    userOptions.basedir = file.__basedir ? Plugin.convertToOSPath getNpmDir file, basedirOption
+    file.__basedir = userOptions.basedir
 
     # merge user options with defaults (option.package is file.getFileOptions())
     _.defaults userOptions, option.package, defaultOptions
