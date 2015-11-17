@@ -1,3 +1,10 @@
+# 0.9.1 - 2015/11/17
+
+1. **local package** *basedir* option handling worked despite *.npm/package* tail, now it removes that tail
+2. cleaned up **published package** *basedir* option handling using a Meteor property to get *~/.meteor* location
+3. final else uses `basedirOption` or `.`
+4. reordered `getBrowserifyOptions()` to: defaults, option file, basedir processing, combine
+
 # 0.9.0 - 2015/11/15
 
 1. use basedir option to find local node_modules allowing manual `npm install` use
