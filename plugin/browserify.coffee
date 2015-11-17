@@ -34,27 +34,45 @@ path = Plugin.path
 
 # helps getNpmDir by searching even deeper into the InputFile's properties
 getNpmDirForPackage = (isopackCache, name, basedirOption) ->
-  pkg = isopackCache._packageMap._map[name]
-  if pkg.kind is 'local' then pkg.packageSource.npmCacheDirectory
 
-  else # it's a versioned package... doesn't have a packageSource object.
+  # get the deep property object for the named package
+  pkg = isopackCache._packageMap._map[name]
+
+  if pkg.kind is 'local'
+    # where the official Meteor npm storage is
+    npmCache = pkg.packageSource.npmCacheDirectory
+
+    # if we have a basedirOption then strip off the '.npm/package' part
+    # TODO: this assumes the basedir is 'packages/packageName' and the
+    # 'node_modules' is at the root of the packages.
+    # could do a lot of inspection into basedir to find node_modules in a
+    # subdirectory of the package. For now, require it at the root.
+    # NOTE: this makes sense, however, before I added this line it still worked
+    # with .npm/package on the end and the node_modules was in root of package. Weird.
+    if basedirOption? then npmCache[...-12] else npmCache
+
+  else # it's a published (versioned) package... so, no packageSource object.
+
+    # if user specified a basedir option...
+    # without any Npm.depends() in package.js there's no nodeModulesPath into
+    # the ./meteor/packages so I can't use that to get an absolute path to that area.
+    # there is a `_tropohouse.root` property with the equivalent of ~/.meteor
+    # so I'll use that.
+    if basedirOption?
+      # get `~/.meteor` from deep property
+      root = isopackCache._tropohouse.root
+
+      # package name uses a colon, file system uses an underscore
+      packageName = name.replace ':', '_'
+
+      # combine this all into a directory  # TODO: search web.cordova too?
+      return path.join root, 'packages', packageName, pkg.version, 'web.browser', basedirOption
+
+    # otherwise, let's search the builds for this package
     builds = isopackCache._isopacks[name].unibuilds
 
-    for build in builds when build.arch is 'os' # the 'os' one has nodeModulesPath
-      # if user specified a basedir option
-      if basedirOption?
-        # we need the home directory to find ~/.meteor/packages
-        home = process.env.HOME ? process.env.USERPROFILE
-        meteorPackages = home + '/.meteor/packages/'
-        # package name uses a colon, file system uses an underscore
-        packageName = name.replace ':', '_'
-        # the build info has the package's version
-        version = '/' + build.pkg.version
-        # combine this all into a directory and convert it to OS specific path
-        dir = Plugin.convertToOSPath meteorPackages + packageName + version + '/web.browser/' + basedirOption
-        # lastly, return this directory only if it has `node_modules` in it
-        return dir if fs.existsSync path.join dir, 'node_modules'
-      # if we didn't return above, then, return this:
+    # the 'os' one has nodeModulesPath
+    for build in builds when build.arch is 'os'
       return build.nodeModulesPath[...-12]
 
 getNpmDir = (file, basedirOption) ->
@@ -69,7 +87,9 @@ getNpmDir = (file, basedirOption) ->
   else if isopackCache._packageMap._map?['npm-container']?
     getNpmDirForPackage isopackCache, 'npm-container'
 
-  else '.' # else, they'd better have `node_modules` in the root of the app
+  # else, they'd better have `node_modules` in the root of the app
+  # or, they set a basedir option pointing at its location in the app
+  else basedirOption ? '.' # TODO: check both for 'node_modules' ?
 
 
 # extend standard compiler class to make implementation easier.
@@ -217,17 +237,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
   getBrowserifyOptions: (file, option) ->
 
-    # empty user options to fill from file, if it exists
-    userOptions = {}
-
-    if option?.input?
-      userOptions = JSON.parse option.input.getContentsAsString()
-
-    # check for `basedir` from options file or package.js file options
-    basedirOption = userOptions.basedir ? option?.package?.basedir
-
-    # sane defaults for options
-    # NOTE: no longer putting basedir right here
+    # sane defaults for options # NOTE: no longer putting basedir right here
     defaultOptions =
 
       # must be true to produce source map which we extract via exorcist and
@@ -240,6 +250,16 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
         envify:
           NODE_ENV: if @getDebug() then 'development' else 'production'
           _:'purge'
+
+
+    # empty user options to fill from file, if it exists
+    userOptions = {}
+
+    if option?.input?
+      userOptions = JSON.parse option.input.getContentsAsString()
+
+    # check for `basedir` from options file and package.js file options
+    basedirOption = userOptions.basedir ? option?.package?.basedir
 
     # Browserify will look in `basedir` for npm modules
     # 1. place the result into `userOptions` so it's last in the hierarchy
