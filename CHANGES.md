@@ -1,3 +1,7 @@
+# 0.8.4 - 2015/11/17
+
+1. fix searching for `nodeModulesPath` in builds
+
 # 0.8.3 - 2015/10/30
 
 1. upgrade Browserify from 11.1.0 to 11.2.0
