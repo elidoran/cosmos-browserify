@@ -39,7 +39,7 @@ getNpmDirForPackage = (isopackCache, name) ->
 
   else # it's a versioned package... doesn't have a packageSource object.
     builds = isopackCache._isopacks[name].unibuilds
-    for build in builds when build.arch is 'os' # the 'os' one has nodeModulesPath
+    for build in builds when build.nodeModulesPath?
       return build.nodeModulesPath[...-12]
 
 getNpmDir = (file) ->
