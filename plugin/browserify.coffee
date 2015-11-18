@@ -70,9 +70,7 @@ getNpmDirForPackage = (isopackCache, name, basedirOption) ->
 
     # otherwise, let's search the builds for this package
     builds = isopackCache._isopacks[name].unibuilds
-
-    # the 'os' one has nodeModulesPath
-    for build in builds when build.arch is 'os'
+    for build in builds when build.nodeModulesPath?
       return build.nodeModulesPath[...-12]
 
 getNpmDir = (file, basedirOption) ->
