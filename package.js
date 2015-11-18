@@ -1,6 +1,6 @@
 Package.describe({
   name: 'cosmos:browserify',
-  version: '0.9.1',
+  version: '0.9.2',
   summary: 'Bundle NPM modules for client side with Browserify',
   git: 'https://github.com/elidoran/cosmos-browserify.git',
   documentation: 'README.md'

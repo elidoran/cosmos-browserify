@@ -1,3 +1,7 @@
+# 0.9.2 - 2015/11/17
+
+1. merge fix in 0.8.4
+
 # 0.9.1 - 2015/11/17
 
 1. **local package** *basedir* option handling worked despite *.npm/package* tail, now it removes that tail
