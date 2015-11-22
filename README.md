@@ -6,7 +6,7 @@
 
 ## Table of Contents
 
-1. [Example Meteor App](#example-meteor-app)
+1. [Examples](#examples)
 2. [Use in a Meteor Package](#use-in-a-meteor-package)
     1. [Create and Add Your Package](#1-create-and-add-your-package)
     2. [Create browserify file](#2-create-browserify-file)
@@ -23,9 +23,19 @@
 5. [Caching Result](#caching-result)
 6. [Reporting an Issue](#reporting-an-issue)
 
-## Example Meteor App
+## Examples
 
-Look at [cosmos-browserify-example](http://github.com/elidoran/cosmos-browserify-example) for a complete working Meteor app example. Look at a [package in the app](http://github.com/elidoran/cosmos-browserify-example/tree/master/packages/browserify-example) to see how to make one.
+There are four examples for you to look at:
+
+Standard Use:
+
+1. [Example App](https://github.com/elidoran/cosmos-browserify-example/tree/master/app) using **meteorhacks:npm** to install npm modules
+2. [Example Package](https://github.com/elidoran/cosmos-browserify-example/tree/master/package) using Meteor's **Npm.depends()** to install npm modules
+
+Alternate use with manual calls to `npm install` to install modules (requires 0.9+):
+
+1. [Example App 2](https://github.com/elidoran/cosmos-browserify-example/tree/master/app-npm) using `npm install <module>`
+2. [Example Package 2](https://github.com/elidoran/cosmos-browserify-example/tree/master/package-npm) using `npm install <module>`
 
 
 ## Use in a Meteor Package
@@ -66,7 +76,7 @@ Npm.depends({
 
 Package.onUse(function(api) {
   // add package
-  api.use(['cosmos:browserify@0.7.0'], 'client');
+  api.use(['cosmos:browserify@0.9.2'], 'client');
 
   // add browserify file in step #2 with your package's client files
   api.addFiles(['client.browserify.js', 'your/package/file.js'], 'client');
@@ -246,7 +256,6 @@ api.addFiles([
 ## Caching Result
 
 As of 0.7.0 the Meteor Build API supports caching build plugin results. It will only redo a browserify operation when files it builds have changed.
-
 
 ## Reporting an Issue
 
