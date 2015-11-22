@@ -45,7 +45,7 @@ Specify npm modules in your package and browserify them to the client. The varia
 
 #### Quick Start
 
-For a quick start, copy my functional [example package](https://github.com/elidoran/cosmos-browserify-example/blob/master/packages/browserify-example).
+For a quick start, copy my functional [example package](https://github.com/elidoran/cosmos-browserify-example/tree/master/package).
 
 #### 1. Create and Add your package
 
