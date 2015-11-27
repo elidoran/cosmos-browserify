@@ -1,6 +1,7 @@
 # 0.9.2 - 2015/11/17
 
 1. merge fix in 0.8.4
+2. changed README to reference the four new examples
 
 # 0.9.1 - 2015/11/17
 
