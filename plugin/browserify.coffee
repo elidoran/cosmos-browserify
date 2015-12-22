@@ -177,7 +177,8 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
       return compileResult:compileResult, referencedImportPaths:option.ref
 
     catch e
-      file.error message:e.message
+      file.error message:e.message + '\n' +
+        @buildErrorMessage e, option, browserifyOptions
 
     return
 
@@ -195,6 +196,51 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     browserify.transform envify envifyOptions
 
     return
+
+  buildErrorMessage: (error, option, browserifyOptions) ->
+    # let's look for the cannot find module error's parts
+    regex = /Cannot find module '(.*)' from '(.*)'/
+    match = regex.exec error.toString()
+
+    # if we find them then the second one will exist in match
+    if match?[2]?
+      # first is the name of the module
+      module = match[1]
+      # second is the basedir used, the 'from'
+      basedir = match[2]
+
+      # check if the basedir exists
+      dir = basedir
+      basedirExists = if fs.existsSync dir then 'yes' else 'MISSING'
+
+      # check if the basedir has `node_modules` in it
+      dir = path.join dir, 'node_modules'
+      nodeModulesExists = if fs.existsSync dir then 'yes' else 'MISSING'
+
+      # check if the module is in the node_modules directory
+      dir = path.join dir, module
+      moduleExists = if fs.existsSync dir then 'yes' else 'MISSING'
+
+      # show the above results in the message
+      moduleCheckMessage =
+        """
+
+        Missing module check:
+        >  basedir exists     : #{basedirExists}
+        >  node_modules exists: #{nodeModulesExists}
+        >  module exists      : #{moduleExists}
+
+        """
+
+    # else use an empty string because it's not a 'cannot find module' error
+    else moduleCheckMessage = ''
+
+    # now create the message to return
+    """
+    #{moduleCheckMessage}
+    Browserify options:
+    >  #{JSON.stringify browserifyOptions, null, '>  '}
+    """
 
 
   getBundle: (browserify, file) ->
