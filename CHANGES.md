@@ -1,3 +1,8 @@
+# 0.9.3 - 2015/12/22
+
+1. fix issue #35 by resolving basedir into an absolute path
+2. add a helpful error message
+
 # 0.9.2 - 2015/11/17
 
 1. merge fix in 0.8.4
