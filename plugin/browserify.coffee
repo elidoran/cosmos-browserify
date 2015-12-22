@@ -181,7 +181,6 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     return
 
-
   applyTransforms: (browserify, browserifyOptions) ->
 
     # extract envify tranform's options so it isn't used in loop
@@ -265,8 +264,14 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     # 2. check for cached result to avoid the work in rebuilds
     # 3. include `basedirOption` no matter what, it may be undefined
     # 4. store the result on the `file` for #2
-    userOptions.basedir = file.__basedir ? Plugin.convertToOSPath getNpmDir file, basedirOption
-    file.__basedir = userOptions.basedir
+    if file.__basedir?
+      userOptions.basedir = file.__basedir
+    else
+      # use getNpmDir to find the basedir
+      # resolve it to an absolute path so it's not '.'
+      # convert to OS specific for Browserify
+      userOptions.basedir = Plugin.convertToOSPath path.resolve getNpmDir file, basedirOption
+      file.__basedir = userOptions.basedir
 
     # merge user options with defaults (option.package is file.getFileOptions())
     _.defaults userOptions, option.package, defaultOptions
