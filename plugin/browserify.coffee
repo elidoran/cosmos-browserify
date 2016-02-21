@@ -16,6 +16,9 @@ strung = npm.require 'strung'
 fs = Plugin.fs
 path = Plugin.path
 
+# avoid circular ref's error
+stringify = npm.require 'json-stringify-safe'
+
 # # # NOTES FOR getNpmDir()
 #
 # finding the root is even more complicated in the new Build API, yay.
@@ -182,6 +185,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     return
 
+
   applyTransforms: (browserify, browserifyOptions) ->
 
     # extract envify tranform's options so it isn't used in loop
@@ -239,7 +243,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     """
     #{moduleCheckMessage}
     Browserify options:
-    >  #{JSON.stringify browserifyOptions, null, '>  '}
+    >  #{stringify browserifyOptions, null, '>  '}
     """
 
 
