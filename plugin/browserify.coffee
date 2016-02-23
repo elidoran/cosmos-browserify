@@ -163,11 +163,23 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
       # get options for Browserify
       browserifyOptions = @getBrowserifyOptions file, option
 
+      # extract special options
+      specialOptions = {}
+      for which in ['ignore', 'external', 'exclude', 'plugin']
+        specialOptions[which] = browserifyOptions[which]
+        delete browserifyOptions[which]
+
       # create a browserify instance passing our readable stream as input,
       # and options object for debug and the basedir
       browserify = Browserify [@getReadable(file)], browserifyOptions
 
+      # convert object "options" into their corresponding specific function calls
+      @applySpecialOptions browserify, browserifyOptions, specialOptions
+
       # apply browserify tranforms specified in options file, and envify
+      # the transforms can be in the browserify options object without problems
+      # because we named it 'transforms' instead of 'transform'. Had we done that,
+      # I'd have to extract it along with the other "special" options...
       @applyTransforms browserify, browserifyOptions
 
       # process bundle with exorcist to get source map
@@ -181,9 +193,33 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     catch e
       file.error message:e.message + '\n' +
-        @buildErrorMessage e, option, browserifyOptions
+        @buildErrorMessage e, option, browserifyOptions, specialOptions
 
     return
+
+
+  applySpecialOptions: (browserify, browserifyOptions, options) ->
+    # check for these types of options groups
+    for which in [ 'ignore', 'external', 'exclude', 'plugin' ]
+
+      # if it exists in options then we'll process it
+      if options[which]?
+
+        # they're in an array to allow order control
+        for it in options[which]
+
+          # when it's a string just pass that to the function
+          if typeof(it) is 'string'
+            browserify[which] it, basedir:browserifyOptions.basedir
+
+          # to allow them to have options, look for an object element
+          else if typeof(it) is 'object'
+
+            # iterate thru its keys which are strings to pass to the function
+            # and its value is the options, which may be empty..
+            for name,whichOptions of it
+              whichOptions.basedir ?= browserifyOptions.basedir
+              browserify[which] name, whichOptions
 
 
   applyTransforms: (browserify, browserifyOptions) ->
@@ -201,7 +237,7 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
 
     return
 
-  buildErrorMessage: (error, option, browserifyOptions) ->
+  buildErrorMessage: (error, option, browserifyOptions, specialOptions) ->
     # let's look for the cannot find module error's parts
     regex = /Cannot find module '(.*)' from '(.*)'/
     match = regex.exec error.toString()
@@ -244,6 +280,9 @@ class BrowserifyPlugin extends MultiFileCachingCompiler
     #{moduleCheckMessage}
     Browserify options:
     >  #{stringify browserifyOptions, null, '>  '}
+
+    Special options:
+    >  #{stringify specialOptions, null, '>  '}
     """
 
 
