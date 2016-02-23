@@ -20,6 +20,7 @@
     4. [Verify success](#4-verify-it-worked)
 4. [Passing options to Browserify](#passing-options-to-browserify)
     1. [Using transforms](#using-transforms)
+    2. [Using Special Options](#using-special-options)
 5. [Caching Result](#caching-result)
 6. [Reporting an Issue](#reporting-an-issue)
 
@@ -207,6 +208,57 @@ You can use any [options that you can pass to the API](https://github.com/substa
 To use a Browserify transform from NPM, add its package to your `packages.json` as described above; then pass it in the special `transform` option. This option is an object where the keys are the transform names, and the values are the options that can be passed to that transform.
 
 Below is an example of using the `exposify` transform to use a global React variable with React Router instead of the React package from NPM.
+
+
+#### Using Special Options
+
+What I'm calling "Special Options" are:
+
+1. ignore
+2. exclude
+3. external
+4. plugin
+
+When you use those at the top level of the JSON options object cosmos:browserify will use explicitly by calling their corresponding functions on the created Browserify object.
+
+Specify their values using an array. Each element in the array will be passed to the corresponding function call.
+
+Each element may be:
+
+1. string
+2. object
+
+When it's a string it is passed to the function as the first argument.
+
+When it's an object each top-level key of that object is used as the first argument to the function and its value is passed as the second argument.
+
+For example:
+```json
+{
+  "plugin" : [
+    "some-plugin",
+    { "browserify-resolutions" : "*"}
+    { "browserify-resolutions" : [ "*" ] }
+  ]
+}
+```
+
+Both `browserify-resolutions` are equivalent. The second one allows specifying an array of values to it.
+
+Also, you could specify multiple plugins with options in a single object element. The outer array allows ordering the plugins.
+
+Their corresponding function calls look like this:
+
+```javascript
+browserifyObject.plugin('some-plugin', {basedir:'the/basedir'})
+
+browserifyObject.plugin('browserify-resolutions', '*')
+// OR:
+browserifyObject.plugin('browserify-resolutions', ['*'])
+```
+
+Where did the `basedir` come from? Some of the functions look for the `basedir` property. So, I'm setting it onto options objects from the basedir we're providing the Browserify object on creation.
+
 
 ##### packages.json
 
