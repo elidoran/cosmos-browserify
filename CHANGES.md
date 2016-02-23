@@ -1,8 +1,12 @@
-# 0.10.0 - 2015/02/22
+# 0.10.0 - 2016/02/22
 
 1. extracted "special options" before creating Browserify: ignore, exclude, external, plugin
 2. called corresponding functions on Browserify object for "special options"
 3. added output of "special options" to the `buildErrorMessage` function
+
+# 0.9.4 - 2016/02/20
+
+1. use `json-stringify-safe` when building error message to avoid circular ref error
 
 # 0.9.3 - 2015/12/22
 
