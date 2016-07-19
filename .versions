@@ -8,7 +8,6 @@ boilerplate-generator@1.0.4
 caching-compiler@1.0.0
 callback-hook@1.0.4
 check@1.1.0
-coffeescript@1.0.11
 cosmos:browserify@0.10.0
 ddp@1.2.2
 ddp-client@1.2.1
