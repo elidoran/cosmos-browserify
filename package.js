@@ -9,10 +9,10 @@ Package.describe({
 Package.registerBuildPlugin({
   name: "CosmosBrowserify",
   // need 'meteor' for Npm and Meteor.wrapAsync
-  use: ['caching-compiler@1.0.0', 'coffeescript@1.0.11', 'meteor', 'underscore@1.0.4'],
-  sources: ['plugin/browserify.coffee'],
+  use: ['caching-compiler@1.0.0', 'meteor', 'underscore@1.0.4'],
+  sources: ['plugin/browserify.js'],
   npmDependencies: {
-    "browserify": "12.0.1"         // primary tool which actually does the browserify
+      "browserify": "12.0.1"         // primary tool which actually does the browserify
     , "envify":"3.4.0"             // transforms process.env values
     , "exorcist-stream":"0.4.0"    // gets source map from source (forked version for streaming)
     , "strung":"1.0.4"             // acts as a readable/writable/duplex
@@ -38,28 +38,6 @@ Package.onUse(function (api) {
   api.versionsFrom('1.2');
   api.use([
     'isobuild:compiler-plugin@1.0.0'
-  ], 'server');
-
-});
-
-Package.onTest(function(api) {
-
-  api.use([
-    'tinytest',
-    'coffeescript',
-    'underscore' ,
-    'cosmos:browserify'
-  ], 'server');
-
-  api.addFiles([
-    // mock things we aren't able to get in our test environment.
-    'test/mocks.coffee',
-
-    // add our plugin, again, so we can get at the class
-    'plugin/browserify.coffee',
-
-    // the tests
-    'test/browserify-tests.coffee'
   ], 'server');
 
 });
