@@ -1,5 +1,7 @@
 # Cosmos Browserify [![Build Status](https://travis-ci.org/elidoran/cosmos-browserify.svg?branch=master)](https://travis-ci.org/elidoran/cosmos-browserify)
 
+### As of Meteor 1.4 it handles npm packages itself. No need to use Browserify so no need to use this plugin.
+
 #### [Browserify](http://browserify.org) [npm](http://npmjs.org) dependencies in [Meteor](http://meteor.com) packages for **client side** use.
 
 #### Note: For Meteor 1.2 you must use cosmos:browserify 0.8+
